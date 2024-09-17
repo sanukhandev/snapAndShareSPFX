@@ -2,8 +2,7 @@
 import * as React from "react";
 import { ISnapAndShareProps } from "./ISnapAndShareProps";
 import "../../../styles/dist/tailwind.css";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+
 import CreatePost from "./childs/CreatePost";
 import Post from "./childs/Post";
 import Toast from "./childs/Toast";
@@ -15,6 +14,8 @@ interface IPostWithComments extends IPost {
   imageUrl: string;
   comments: IComment[]; // Use IComment to match the expected type
   userComment: string;
+  isLiked: boolean; // Add this property
+  likeCount: number; // Add this property
 }
 
 interface ISnapAndShareState {
@@ -86,6 +87,8 @@ export default class SnapAndShare extends React.Component<
           imageUrl: postImages.length > 0 ? postImages[0].FileRef : "",
           comments: postComments,
           userComment: "",
+          isLiked: false,
+          likeCount: 0,
         };
       });
 
@@ -139,6 +142,28 @@ export default class SnapAndShare extends React.Component<
       this.showToast("Error creating post.");
     }
   }
+  private async handleLike(postId: number): Promise<void> {
+    try {
+      // Call a service to handle the like logic
+      await spService.likePost(postId);
+      this.showToast("Post liked successfully!");
+      await this.loadPostsAndImages(); // Reload the posts to update the like status
+    } catch (error) {
+      console.error("Error liking post:", error);
+      this.showToast("Error liking post.");
+    }
+  }
+
+  private handleShare(postId: number): void {
+    try {
+      // Call a service to handle the share logic
+      spService.sharePost(postId);
+      this.showToast("Post shared successfully!");
+    } catch (error) {
+      console.error("Error sharing post:", error);
+      this.showToast("Error sharing post.");
+    }
+  }
 
   private async handleAddComment(
     postId: number,
@@ -170,6 +195,8 @@ export default class SnapAndShare extends React.Component<
             key={post.ID}
             post={post}
             onAddComment={this.handleAddComment}
+            onLike={this.handleLike}
+            onShare={this.handleShare}
           />
         ))}
       </div>

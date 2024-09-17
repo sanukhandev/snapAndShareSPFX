@@ -1,11 +1,8 @@
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faThumbsUp,
-  faComment,
-  faShare,
-} from "@fortawesome/free-solid-svg-icons";
+import { faComment } from "@fortawesome/free-solid-svg-icons";
 import ImageSliderModal from "./ImageSliderModal";
+import LikeShareActions from "./LikeShareActions";
 
 interface CommentAuthor {
   Title: string;
@@ -19,16 +16,20 @@ interface Comment {
 interface PostWithComments {
   ID: number;
   Title: string;
-  Createed: string; // Assuming this is how creation date is spelled in your data
+  Createed: string;
   avatarUrl: string;
   imageUrl: string;
   user: string;
   comments: Comment[];
+  isLiked: boolean;
+  likeCount: number;
 }
 
 interface PostProps {
   post: PostWithComments;
   onAddComment: (postId: number, comment: string) => void;
+  onLike: (postId: number) => void;
+  onShare: (postId: number) => void;
 }
 
 interface PostState {
@@ -71,7 +72,7 @@ class Post extends React.Component<PostProps, PostState> {
   }
 
   render(): JSX.Element {
-    const { post } = this.props;
+    const { post, onLike, onShare } = this.props;
     const { isModalOpen, userComment } = this.state;
 
     const postDate = new Date(post.Createed).toLocaleDateString(undefined, {
@@ -129,19 +130,15 @@ class Post extends React.Component<PostProps, PostState> {
           </p>
 
           <div className="mt-4 flex justify-between">
-            <div className="flex space-x-4">
-              <button className="text-blue-500 flex items-center">
-                <FontAwesomeIcon icon={faThumbsUp} className="m-2" />
-                Like
-              </button>
-              <button className="text-blue-500 flex items-center">
-                <FontAwesomeIcon icon={faComment} className="m-2" />
-                Comment
-              </button>
-            </div>
+            <LikeShareActions
+              isLiked={post.isLiked}
+              likeCount={post.likeCount}
+              onLike={() => onLike(post.ID)}
+              onShare={() => onShare(post.ID)}
+            />
             <button className="text-blue-500 flex items-center">
-              <FontAwesomeIcon icon={faShare} className="m-2" />
-              Share
+              <FontAwesomeIcon icon={faComment} className="m-2" />
+              Comment
             </button>
           </div>
 
@@ -149,9 +146,9 @@ class Post extends React.Component<PostProps, PostState> {
             <div className="flex items-start space-x-4 mt-2">
               <div className="bg-gray-100 rounded-lg p-2 shadow-md w-full">
                 <p className="text-gray-700 font-semibold">
-                  {latestComment.CommentAuthor.Title}
+                  @{latestComment.CommentAuthor.Title}
                 </p>
-                <p className="text-gray-600">@{latestComment.Title}</p>
+                <p className="text-gray-600">{latestComment.Title}</p>
               </div>
             </div>
 

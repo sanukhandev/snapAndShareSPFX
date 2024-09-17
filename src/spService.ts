@@ -108,6 +108,28 @@ class SpService {
       CommentAuthorId: author,
     });
   }
+
+  public async likePost(postId: number): Promise<void> {
+    await sp.web.lists
+      .getByTitle("SnapAndSharePosts")
+      .items.getById(postId)
+      .update({
+        PostLikedBy: {
+          results: ["1"],
+        },
+      });
+  }
+
+  public async sharePost(postId: number): Promise<void> {
+    const post = await sp.web.lists
+      .getByTitle("SnapAndSharePosts")
+      .items.getById(postId)
+      .select("Title")
+      .get();
+
+    const postTitle = post.Title;
+    alert(`Post shared: ${postTitle}`);
+  }
 }
 
 export const spService = new SpService();
