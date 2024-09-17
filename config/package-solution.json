@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "snap-and-share-tc-client-side-solution",
+    "id": "37c6f008-31c8-4a94-8d14-0e7c05e0f211",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.19.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "snap-and-share-tc description"
+      },
+      "longDescription": {
+        "default": "snap-and-share-tc description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "snap-and-share-tc Feature",
+        "description": "The feature that activates elements of the snap-and-share-tc solution.",
+        "id": "05c95685-5e30-4c7e-ac47-fd917398647e",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/snap-and-share-tc.sppkg"
+  }
+}
