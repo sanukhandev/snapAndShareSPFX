@@ -154,10 +154,10 @@ export default class SnapAndShare extends React.Component<
     }
   }
 
-  private handleShare(postId: number): void {
+  private async handleShare(postId: number): Promise<void> {
     try {
       // Call a service to handle the share logic
-      spService.sharePost(postId);
+      await spService.sharePost(postId);
       this.showToast("Post shared successfully!");
     } catch (error) {
       console.error("Error sharing post:", error);
