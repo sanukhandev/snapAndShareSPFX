@@ -146,7 +146,7 @@ export interface IPost {
     Title: string;
   };
   PostLikedBy?: string; // User IDs of people who liked the post (semicolon-separated)
-  Created: string;
+  Createed: string;
 }
 
 export interface IImage {
