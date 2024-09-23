@@ -8,7 +8,7 @@ export interface IPost {
     EMail: string;
     Title: string;
   };
-  PostLikedBy?: string;
+  PostLikedBy?: string; // User IDs of people who liked the post (semicolon-separated)
   Createed: string;
 }
 
@@ -30,6 +30,7 @@ export interface IComment {
 }
 
 class SpService {
+  // Setup the SPFx context
   public setup(spfxContext: any): void {
     sp.setup({
       spfxContext,
@@ -37,6 +38,7 @@ class SpService {
     });
   }
 
+  // Get all posts
   public async getPosts(): Promise<IPost[]> {
     return sp.web.lists
       .getByTitle("SnapAndSharePosts")
@@ -45,13 +47,15 @@ class SpService {
         "Title",
         "PostedBy/Title",
         "PostedBy/EMail",
-        "Createed"
+        "Created",
+        "PostLikedBy"
       )
       .orderBy("ID", false)
       .expand("PostedBy")
       .get();
   }
 
+  // Get all images
   public async getImages(): Promise<IImage[]> {
     return sp.web.lists
       .getByTitle("SnapAndShareImages")
@@ -59,6 +63,7 @@ class SpService {
       .get();
   }
 
+  // Get all comments
   public async getComments(): Promise<IComment[]> {
     return sp.web.lists
       .getByTitle("SnapAndShareComments")
@@ -68,6 +73,7 @@ class SpService {
       .get();
   }
 
+  // Add a new post
   public async addPost(caption: string, userId: number): Promise<any> {
     return sp.web.lists.getByTitle("SnapAndSharePosts").items.add({
       Title: caption,
@@ -76,6 +82,7 @@ class SpService {
     });
   }
 
+  // Upload image to a specific post
   public async uploadImage(
     fileName: string,
     fileArrayBuffer: ArrayBuffer,
@@ -96,30 +103,56 @@ class SpService {
       });
   }
 
+  // Add a new comment to a post
   public async addComment(
     postId: number,
     comment: string,
-    author: number
+    authorId: number
   ): Promise<void> {
     await sp.web.lists.getByTitle("SnapAndShareComments").items.add({
       Title: comment,
-      Comment: comment,
       PostID: postId,
-      CommentAuthorId: author,
+      CommentAuthorId: authorId,
     });
   }
 
-  public async likePost(postId: number): Promise<void> {
+  // Like or Unlike a post
+  public async likePost(postId: number, userId: number): Promise<void> {
+    // Get the post by ID
+    const post = await sp.web.lists
+      .getByTitle("SnapAndSharePosts")
+      .items.getById(postId)
+      .select("PostLikedBy")
+      .get();
+
+    // Check if PostLikedBy field exists and split it into an array
+    let likedByArray = post.PostLikedBy ? post.PostLikedBy.split(";") : [];
+
+    // Check if user already liked the post
+    const isLiked = likedByArray.includes(userId.toString());
+
+    // If liked, remove the user ID (unlike); otherwise, add the user ID (like)
+    if (isLiked) {
+      likedByArray = likedByArray.filter(
+        (id: string) => id !== userId.toString()
+      );
+    } else {
+      likedByArray.push(userId.toString());
+    }
+
+    // Join the updated list back into a semicolon-separated string
+    const likedByString = likedByArray.join(";").trim();
+
+    // Update the post with the new list of liked users
     await sp.web.lists
       .getByTitle("SnapAndSharePosts")
       .items.getById(postId)
       .update({
-        PostLikedBy: {
-          results: ["1"],
-        },
+        PostLikedBy: likedByString,
       });
   }
 
+  // Share a post (this just triggers an alert for now)
   public async sharePost(postId: number): Promise<void> {
     const post = await sp.web.lists
       .getByTitle("SnapAndSharePosts")
