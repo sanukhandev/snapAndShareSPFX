@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/webparts/snapAndShare/components/SnapAndShare.tsx
 import * as React from "react";
 import CreatePost from "./childs/CreatePost";
@@ -30,10 +31,10 @@ export default class SnapAndShare extends React.Component<
   ISnapAndShareState
 > {
   Title: ReactNode;
-    ID: any;
-    images: any;
-    user: ReactNode;
-    avatarUrl: string | undefined;
+  ID: any;
+  images: any;
+  user: ReactNode;
+  avatarUrl: string | undefined;
   constructor(props: ISnapAndShareProps) {
     super(props);
     this.state = {
@@ -81,7 +82,7 @@ export default class SnapAndShare extends React.Component<
       const postsWithDetails = posts.map((post) => {
         const postImages = imagesByPostId[post.ID] || [];
         const postComments = commentsByPostId[post.ID] || [];
-      
+
         return {
           ID: post.ID,
           Title: post.Title,
@@ -213,19 +214,6 @@ export default class SnapAndShare extends React.Component<
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // /* eslint-disable @typescript-eslint/no-explicit-any */
 // import * as React from "react";
@@ -382,8 +370,6 @@ export default class SnapAndShare extends React.Component<
 //       this.showToast("Error liking post.");
 //     }
 //   }
-
-  
 
 //   private async handleShare(postId: number): Promise<void> {
 //     try {
