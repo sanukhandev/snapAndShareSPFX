@@ -1,9 +1,9 @@
 // src/webparts/snapAndShare/components/SnapAndShare.tsx
 import * as React from "react";
 import CreatePost from "./childs/CreatePost";
-import Post from "./Post"; // Import the Post component here
+import Post from "./childs/Post"; // Correct the import path for the Post component
 import Toast from "./childs/Toast";
-import { spService, IPost, IComment, IImage } from "../../../spService";
+import { spService, IPost, IComment } from "../../../spService";
 import { ISnapAndShareProps } from "./ISnapAndShareProps";
 import { ReactNode } from "react";
 
@@ -15,6 +15,7 @@ export interface IPostWithComments extends IPost {
   images: { FileRef: string }[]; // Array of images with file reference
   comments: IComment[]; // Array of comments
   userComment: string;
+  imageUrl: string;
   isLiked: boolean;
   likeCount: number;
 }
@@ -80,7 +81,7 @@ export default class SnapAndShare extends React.Component<
       const postsWithDetails = posts.map((post) => {
         const postImages = imagesByPostId[post.ID] || [];
         const postComments = commentsByPostId[post.ID] || [];
-
+      
         return {
           ID: post.ID,
           Title: post.Title,
@@ -95,6 +96,7 @@ export default class SnapAndShare extends React.Component<
           userComment: "",
           isLiked: false,
           likeCount: 0,
+          imageUrl: postImages.length > 0 ? postImages[0].FileRef : "", // Add the imageUrl property
         };
       });
 
@@ -200,6 +202,7 @@ export default class SnapAndShare extends React.Component<
         {this.state.posts.map((post) => (
           <Post
             key={post.ID}
+            // IPostProps.post: SnapAndShare
             post={post}
             onAddComment={this.handleAddComment}
             onLike={this.handleLike}
