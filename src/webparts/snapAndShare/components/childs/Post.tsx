@@ -23,6 +23,7 @@ interface PostWithComments {
   comments: Comment[];
   isLiked: boolean;
   likeCount: number;
+  images: { FileRef: string }[];
 }
 
 interface PostProps {
@@ -112,7 +113,7 @@ class Post extends React.Component<PostProps, PostState> {
 
         {isModalOpen && (
           <ImageSliderModal
-            images={[post.imageUrl]}
+            images={post.images}
             caption={post.Title}
             comments={post.comments}
             postId={post.ID}

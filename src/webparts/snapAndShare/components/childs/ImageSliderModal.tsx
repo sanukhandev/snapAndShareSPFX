@@ -14,7 +14,7 @@ interface IComment {
 }
 
 interface ImageSliderModalProps {
-  images: string[];
+  images: { FileRef: string }[];
   caption: string;
   comments: IComment[];
   postId: number;
@@ -116,7 +116,7 @@ class ImageSliderModal extends React.Component<
             {images.length > 0 && (
               <>
                 <img
-                  src={images[currentImageIndex]}
+                  src={images[currentImageIndex].FileRef}
                   alt={`Slide ${currentImageIndex + 1}`}
                   className="object-contain w-full h-full rounded-lg"
                 />
@@ -124,16 +124,16 @@ class ImageSliderModal extends React.Component<
                 {images.length > 1 && (
                   <>
                     <button
-                      className="absolute top-1/2 left-2 text-white bg-black bg-opacity-50 rounded-full px-2 py-1"
+                      className="absolute top-1/2 left-4 transform -translate-y-1/2 text-white bg-black bg-opacity-70 rounded-full p-2 z-20 hover:bg-opacity-100 transition-all duration-300"
                       onClick={this.handlePrevImage}
                     >
-                      <FontAwesomeIcon icon={faChevronCircleLeft} />
+                      <FontAwesomeIcon icon={faChevronCircleLeft} size="2x" />
                     </button>
                     <button
-                      className="absolute top-1/2 right-2 text-white bg-black bg-opacity-50 rounded-full px-2 py-1"
+                      className="absolute top-1/2 right-4 transform -translate-y-1/2 text-white bg-black bg-opacity-70 rounded-full p-2 z-20 hover:bg-opacity-100 transition-all duration-300"
                       onClick={this.handleNextImage}
                     >
-                      <FontAwesomeIcon icon={faChevronCircleRight} />
+                      <FontAwesomeIcon icon={faChevronCircleRight} size="2x" />
                     </button>
                   </>
                 )}
