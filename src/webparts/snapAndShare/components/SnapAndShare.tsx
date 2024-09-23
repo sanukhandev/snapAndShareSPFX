@@ -97,8 +97,13 @@ export default class SnapAndShare extends React.Component<
           images: postImages, // Store all images for the post
           comments: postComments,
           userComment: "",
-          isLiked: false,
-          likeCount: 0,
+          isLiked:
+            post.PostLikedBy?.split(";").some(
+              (x) =>
+                x ===
+                this.props.context.pageContext.legacyPageContext.userId.toString()
+            ) || false,
+          likeCount: post.PostLikedBy ? post.PostLikedBy.split(";").length : 0,
           imageUrl: postImages.length > 0 ? postImages[0].FileRef : "", // Add the imageUrl property
         };
       });

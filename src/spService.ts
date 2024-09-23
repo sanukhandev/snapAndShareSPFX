@@ -116,40 +116,30 @@ class SpService {
     });
   }
 
-  // Like or Unlike a post
   public async likePost(postId: number, userId: number): Promise<void> {
-    // Get the post by ID
-    const post = await sp.web.lists
-      .getByTitle("SnapAndSharePosts")
-      .items.getById(postId)
-      .select("PostLikedBy")
-      .get();
-
-    // Check if PostLikedBy field exists and split it into an array
-    let likedByArray = post.PostLikedBy ? post.PostLikedBy.split(";") : [];
-
-    // Check if user already liked the post
-    const isLiked = likedByArray.includes(userId.toString());
-
-    // If liked, remove the user ID (unlike); otherwise, add the user ID (like)
-    if (isLiked) {
-      likedByArray = likedByArray.filter(
-        (id: string) => id !== userId.toString()
-      );
-    } else {
-      likedByArray.push(userId.toString());
+    try {
+      const post = await sp.web.lists
+        .getByTitle("SnapAndSharePosts")
+        .items.getById(postId)
+        .select("PostLikedBy")
+        .get();
+      const likedByArray = post.PostLikedBy ? post.PostLikedBy.split(";") : [];
+      const userIdStr = userId.toString();
+      const isLiked = likedByArray.includes(userIdStr);
+      const updatedLikedByArray = isLiked
+        ? likedByArray.filter((id: string) => id !== userIdStr)
+        : [...likedByArray, userIdStr];
+      const likedByString = updatedLikedByArray.join(";").trim();
+      await sp.web.lists
+        .getByTitle("SnapAndSharePosts")
+        .items.getById(postId)
+        .update({
+          PostLikedBy: likedByString,
+        });
+    } catch (error) {
+      console.error(`Error updating likes for post ${postId}:`, error);
+      throw new Error("Unable to update post likes.");
     }
-
-    // Join the updated list back into a semicolon-separated string
-    const likedByString = likedByArray.join(";").trim();
-
-    // Update the post with the new list of liked users
-    await sp.web.lists
-      .getByTitle("SnapAndSharePosts")
-      .items.getById(postId)
-      .update({
-        PostLikedBy: likedByString,
-      });
   }
 
   // Share a post (this just triggers an alert for now)
