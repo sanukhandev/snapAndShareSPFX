@@ -47,7 +47,7 @@ class SpService {
         "Title",
         "PostedBy/Title",
         "PostedBy/EMail",
-        "Created",
+        "Createed",
         "PostLikedBy"
       )
       .orderBy("ID", false)
@@ -77,7 +77,7 @@ class SpService {
   public async addPost(caption: string, userId: number): Promise<any> {
     return sp.web.lists.getByTitle("SnapAndSharePosts").items.add({
       Title: caption,
-      Created: new Date().toISOString(),
+      Createed: new Date().toISOString(),
       PostedById: userId,
     });
   }
