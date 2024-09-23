@@ -6,6 +6,8 @@ import Post from "./childs/Post"; // Correct the import path for the Post compon
 import Toast from "./childs/Toast";
 import { spService, IPost, IComment } from "../../../spService";
 import { ISnapAndShareProps } from "./ISnapAndShareProps";
+import "../../../styles/dist/tailwind.css";
+
 import { ReactNode } from "react";
 
 export interface IPostWithComments extends IPost {

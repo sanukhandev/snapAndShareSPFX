@@ -1,9 +1,10 @@
 import * as React from "react";
-import Slider from "react-slick";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTimes } from "@fortawesome/free-solid-svg-icons";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import {
+  faTimes,
+  faChevronCircleLeft,
+  faChevronCircleRight,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface IComment {
   CommentAuthor: {
@@ -26,6 +27,7 @@ interface ImageSliderModalProps {
 
 interface ImageSliderModalState {
   userComment: string;
+  currentImageIndex: number;
 }
 
 class ImageSliderModal extends React.Component<
@@ -34,13 +36,15 @@ class ImageSliderModal extends React.Component<
 > {
   constructor(props: ImageSliderModalProps) {
     super(props);
-
     this.state = {
       userComment: this.props.userComment || "",
+      currentImageIndex: 0, // Track the current image in the slider
     };
 
     this.handleCommentChange = this.handleCommentChange.bind(this);
     this.handleAddComment = this.handleAddComment.bind(this);
+    this.handleNextImage = this.handleNextImage.bind(this);
+    this.handlePrevImage = this.handlePrevImage.bind(this);
   }
 
   // Update userComment when props change
@@ -65,21 +69,30 @@ class ImageSliderModal extends React.Component<
     }
   }
 
+  // Handle next image
+  handleNextImage(): void {
+    const { currentImageIndex } = this.state;
+    const { images } = this.props;
+    this.setState({
+      currentImageIndex: (currentImageIndex + 1) % images.length,
+    });
+  }
+
+  // Handle previous image
+  handlePrevImage(): void {
+    const { currentImageIndex } = this.state;
+    const { images } = this.props;
+    this.setState({
+      currentImageIndex:
+        (currentImageIndex - 1 + images.length) % images.length,
+    });
+  }
+
   render(): React.ReactElement<ImageSliderModalProps> | undefined {
     const { images, caption, comments, user, isOpen, onClose } = this.props;
-    const { userComment } = this.state;
+    const { userComment, currentImageIndex } = this.state;
 
     if (!isOpen) return undefined;
-
-    // Slider settings for react-slick
-    const sliderSettings = {
-      dots: true,
-      infinite: true,
-      speed: 500,
-      slidesToShow: 1,
-      slidesToScroll: 1,
-      adaptiveHeight: true,
-    };
 
     return (
       <div
@@ -99,18 +112,33 @@ class ImageSliderModal extends React.Component<
           </button>
 
           {/* Image Slider */}
-          <div className="w-full md:w-2/3 bg-black rounded-l-lg overflow-hidden">
-            <Slider {...sliderSettings}>
-              {images.map((imageUrl, index) => (
-                <div key={index}>
-                  <img
-                    src={imageUrl}
-                    alt={`Slide ${index + 1}`}
-                    className="object-contain w-full h-full rounded-lg"
-                  />
-                </div>
-              ))}
-            </Slider>
+          <div className="w-full md:w-2/3 bg-black rounded-l-lg overflow-hidden relative">
+            {images.length > 0 && (
+              <>
+                <img
+                  src={images[currentImageIndex]}
+                  alt={`Slide ${currentImageIndex + 1}`}
+                  className="object-contain w-full h-full rounded-lg"
+                />
+
+                {images.length > 1 && (
+                  <>
+                    <button
+                      className="absolute top-1/2 left-2 text-white bg-black bg-opacity-50 rounded-full px-2 py-1"
+                      onClick={this.handlePrevImage}
+                    >
+                      <FontAwesomeIcon icon={faChevronCircleLeft} />
+                    </button>
+                    <button
+                      className="absolute top-1/2 right-2 text-white bg-black bg-opacity-50 rounded-full px-2 py-1"
+                      onClick={this.handleNextImage}
+                    >
+                      <FontAwesomeIcon icon={faChevronCircleRight} />
+                    </button>
+                  </>
+                )}
+              </>
+            )}
           </div>
 
           {/* Caption and Comments Section */}
