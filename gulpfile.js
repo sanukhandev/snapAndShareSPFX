@@ -5,9 +5,6 @@ const gulp = require('gulp');
 const postcss = require('gulp-postcss');
 const tailwindcss = require('tailwindcss');
 const autoprefixer = require('autoprefixer');
-const fs = require('fs');
-const path = require('path');
-
 // Import SPFx build tools
 const build = require('@microsoft/sp-build-web');
 
