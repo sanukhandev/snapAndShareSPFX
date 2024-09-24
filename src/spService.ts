@@ -30,7 +30,7 @@ export interface IComment {
 }
 
 class SpService {
-  // Setup the SPFx context
+  // Initialize SPFx context
   public setup(spfxContext: any): void {
     sp.setup({
       spfxContext,
@@ -38,39 +38,52 @@ class SpService {
     });
   }
 
+  // Helper method for fetching list items
+  private async fetchListItems<T>(
+    listTitle: string,
+    selectFields: string[],
+    expandFields: string[] = []
+  ): Promise<T[]> {
+    return sp.web.lists
+      .getByTitle(listTitle)
+      .items.select(...selectFields)
+      .expand(...expandFields)
+      .orderBy("ID", false)
+      .get();
+  }
+
   // Get all posts
   public async getPosts(): Promise<IPost[]> {
-    return sp.web.lists
-      .getByTitle("SnapAndSharePosts")
-      .items.select(
+    return this.fetchListItems<IPost>(
+      "SnapAndSharePosts",
+      [
         "ID",
         "Title",
         "PostedBy/Title",
         "PostedBy/EMail",
         "Createed",
-        "PostLikedBy"
-      )
-      .orderBy("ID", false)
-      .expand("PostedBy")
-      .get();
+        "PostLikedBy",
+      ],
+      ["PostedBy"]
+    );
   }
 
   // Get all images
   public async getImages(): Promise<IImage[]> {
-    return sp.web.lists
-      .getByTitle("SnapAndShareImages")
-      .items.select("FileLeafRef", "PostID", "FileRef")
-      .get();
+    return this.fetchListItems<IImage>("SnapAndShareImages", [
+      "FileLeafRef",
+      "PostID",
+      "FileRef",
+    ]);
   }
 
   // Get all comments
   public async getComments(): Promise<IComment[]> {
-    return sp.web.lists
-      .getByTitle("SnapAndShareComments")
-      .items.select("ID", "Title", "PostID", "Created", "CommentAuthor/Title")
-      .expand("CommentAuthor")
-      .orderBy("Created", false)
-      .get();
+    return this.fetchListItems<IComment>(
+      "SnapAndShareComments",
+      ["ID", "Title", "PostID", "Created", "CommentAuthor/Title"],
+      ["CommentAuthor"]
+    );
   }
 
   // Add a new post
@@ -88,13 +101,18 @@ class SpService {
     fileArrayBuffer: ArrayBuffer,
     postId: number
   ): Promise<void> {
+    const folderUrl = "/sites/Intranet_Site/SnapAndShareImages";
+
+    // Upload the file
     const uploadedFile = await sp.web
-      .getFolderByServerRelativeUrl("/sites/Intranet_Site/SnapAndShareImages")
+      .getFolderByServerRelativeUrl(folderUrl)
       .files.add(fileName, fileArrayBuffer, true);
 
+    // Get the item's ID from the uploaded file
     const listItemFields = await uploadedFile.file.listItemAllFields();
     const itemId = listItemFields.ID;
 
+    // Update the image's list item with the post ID
     await sp.web.lists
       .getByTitle("SnapAndShareImages")
       .items.getById(itemId)
@@ -116,6 +134,7 @@ class SpService {
     });
   }
 
+  // Like or unlike a post based on the current user's interaction
   public async likePost(postId: number, userId: number): Promise<void> {
     try {
       const post = await sp.web.lists
@@ -126,15 +145,18 @@ class SpService {
       const likedByArray = post.PostLikedBy ? post.PostLikedBy.split(";") : [];
       const userIdStr = userId.toString();
       const isLiked = likedByArray.includes(userIdStr);
+
+      // Add or remove user from the likedByArray
       const updatedLikedByArray = isLiked
         ? likedByArray.filter((id: string) => id !== userIdStr)
         : [...likedByArray, userIdStr];
-      const likedByString = updatedLikedByArray.join(";").trim();
+
+      // Update the liked users in the post
       await sp.web.lists
         .getByTitle("SnapAndSharePosts")
         .items.getById(postId)
         .update({
-          PostLikedBy: likedByString,
+          PostLikedBy: updatedLikedByArray.join(";").trim(),
         });
     } catch (error) {
       console.error(`Error updating likes for post ${postId}:`, error);
@@ -142,16 +164,19 @@ class SpService {
     }
   }
 
-  // Share a post (this just triggers an alert for now)
+  // Share a post (this triggers an alert for now)
   public async sharePost(postId: number): Promise<void> {
-    const post = await sp.web.lists
-      .getByTitle("SnapAndSharePosts")
-      .items.getById(postId)
-      .select("Title")
-      .get();
-
-    const postTitle = post.Title;
-    alert(`Post shared: ${postTitle}`);
+    try {
+      const post = await sp.web.lists
+        .getByTitle("SnapAndSharePosts")
+        .items.getById(postId)
+        .select("Title")
+        .get();
+      alert(`Post shared: ${post.Title}`);
+    } catch (error) {
+      console.error(`Error sharing post ${postId}:`, error);
+      throw new Error("Unable to share post.");
+    }
   }
 }
 

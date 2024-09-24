@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/webparts/snapAndShare/components/SnapAndShare.tsx
 import * as React from "react";
 import CreatePost from "./childs/CreatePost";
 import Post from "./childs/Post"; // Correct the import path for the Post component
@@ -8,20 +7,19 @@ import { spService, IPost, IComment } from "../../../spService";
 import { ISnapAndShareProps } from "./ISnapAndShareProps";
 import "../../../styles/dist/tailwind.css";
 
-import { ReactNode } from "react";
-
 export interface IPostWithComments extends IPost {
   ID: number;
   Title: string;
   user: string;
   avatarUrl: string;
-  images: { FileRef: string }[]; // Array of images with file reference
-  comments: IComment[]; // Array of comments
+  images: { FileRef: string }[];
+  comments: IComment[];
   userComment: string;
   imageUrl: string;
   isLiked: boolean;
   likeCount: number;
 }
+
 interface ISnapAndShareState {
   posts: IPostWithComments[];
   showToast: boolean;
@@ -32,13 +30,9 @@ export default class SnapAndShare extends React.Component<
   ISnapAndShareProps,
   ISnapAndShareState
 > {
-  Title: ReactNode;
-  ID: any;
-  images: any;
-  user: ReactNode;
-  avatarUrl: string | undefined;
   constructor(props: ISnapAndShareProps) {
     super(props);
+
     this.state = {
       posts: [],
       showToast: false,
@@ -47,6 +41,7 @@ export default class SnapAndShare extends React.Component<
 
     spService.setup(this.props.context);
 
+    // Binding methods to ensure proper context
     this.handlePostCreate = this.handlePostCreate.bind(this);
     this.handleAddComment = this.handleAddComment.bind(this);
     this.handleLike = this.handleLike.bind(this);
@@ -57,13 +52,13 @@ export default class SnapAndShare extends React.Component<
 
   componentDidMount(): void {
     this.loadPostsAndImages().catch((error) => {
-      console.error("Error loading posts and images: ", error);
+      console.error("Error loading posts and images:", error);
     });
   }
 
   private showToast(message: string): void {
     this.setState({ showToast: true, toastMessage: message });
-    setTimeout(() => this.closeToast(), 3000);
+    setTimeout(this.closeToast, 3000);
   }
 
   private closeToast(): void {
@@ -110,7 +105,7 @@ export default class SnapAndShare extends React.Component<
 
       this.setState({ posts: postsWithDetails });
     } catch (error) {
-      console.error("Error loading posts and images: ", error);
+      console.error("Error loading posts and images:", error);
     }
   }
 
@@ -202,15 +197,15 @@ export default class SnapAndShare extends React.Component<
   }
 
   public render(): React.ReactElement<ISnapAndShareProps> {
+    const { posts, showToast, toastMessage } = this.state;
     return (
       <div className="container mx-auto p-2">
         <CreatePost onPostCreate={this.handlePostCreate} />
-        {this.state.showToast && <Toast message={this.state.toastMessage} />}
+        {showToast && <Toast message={toastMessage} />}
         <div className="h-2" />
-        {this.state.posts.map((post) => (
+        {posts.map((post) => (
           <Post
             key={post.ID}
-            // IPostProps.post: SnapAndShare
             post={post}
             onAddComment={this.handleAddComment}
             onLike={this.handleLike}

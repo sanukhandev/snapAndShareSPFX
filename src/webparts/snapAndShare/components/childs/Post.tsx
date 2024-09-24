@@ -52,18 +52,22 @@ class Post extends React.Component<PostProps, PostState> {
     this.handleCommentChange = this.handleCommentChange.bind(this);
   }
 
+  // Open modal to display the image slider
   openModal(): void {
     this.setState({ isModalOpen: true });
   }
 
+  // Close the modal
   closeModal(): void {
     this.setState({ isModalOpen: false });
   }
 
+  // Handle comment text change
   handleCommentChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
     this.setState({ userComment: e.target.value });
   }
 
+  // Add a comment
   handleAddComment(): void {
     const { userComment } = this.state;
     if (userComment.trim()) {
@@ -76,18 +80,21 @@ class Post extends React.Component<PostProps, PostState> {
     const { post, onLike, onShare } = this.props;
     const { isModalOpen, userComment } = this.state;
 
+    // Format the date
     const postDate = new Date(post.Createed).toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
 
+    // Determine the latest comment or default comment
     const latestComment = post.comments.length
       ? post.comments[0]
       : { CommentAuthor: { Title: "Anonymous" }, Title: "No comments yet." };
 
     return (
       <div className="bg-white shadow-md rounded-lg mb-6">
+        {/* Post Header */}
         <div className="p-4 border-b flex items-center">
           <img
             src={post.avatarUrl}
@@ -100,6 +107,7 @@ class Post extends React.Component<PostProps, PostState> {
           </div>
         </div>
 
+        {/* Post Image */}
         <div
           className="w-full h-64 overflow-hidden flex justify-center items-center cursor-pointer"
           onClick={this.openModal}
@@ -111,6 +119,7 @@ class Post extends React.Component<PostProps, PostState> {
           />
         </div>
 
+        {/* Image Slider Modal */}
         {isModalOpen && (
           <ImageSliderModal
             images={post.images}
@@ -125,11 +134,13 @@ class Post extends React.Component<PostProps, PostState> {
           />
         )}
 
+        {/* Post Content */}
         <div className="p-4">
           <p className="italic text-gray-600 text-small ml-2">
             &quot;{post.Title}&quot;
           </p>
 
+          {/* Like, Share, and Comment Actions */}
           <div className="mt-4 flex justify-between">
             <LikeShareActions
               isLiked={post.isLiked}
@@ -143,6 +154,7 @@ class Post extends React.Component<PostProps, PostState> {
             </button>
           </div>
 
+          {/* Display Latest Comment */}
           <div className="mt-2">
             <div className="flex items-start space-x-4 mt-2">
               <div className="bg-gray-100 rounded-lg p-2 shadow-md w-full">
@@ -153,6 +165,7 @@ class Post extends React.Component<PostProps, PostState> {
               </div>
             </div>
 
+            {/* Comment Input Field */}
             <textarea
               value={userComment}
               onChange={this.handleCommentChange}

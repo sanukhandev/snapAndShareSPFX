@@ -1,3 +1,4 @@
+/* eslint-disable @rushstack/no-new-null */
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -38,61 +39,72 @@ class ImageSliderModal extends React.Component<
     super(props);
     this.state = {
       userComment: this.props.userComment || "",
-      currentImageIndex: 0, // Track the current image in the slider
+      currentImageIndex: 0,
     };
-
-    this.handleCommentChange = this.handleCommentChange.bind(this);
-    this.handleAddComment = this.handleAddComment.bind(this);
-    this.handleNextImage = this.handleNextImage.bind(this);
-    this.handlePrevImage = this.handlePrevImage.bind(this);
   }
 
-  // Update userComment when props change
   componentDidUpdate(prevProps: ImageSliderModalProps): void {
     if (prevProps.userComment !== this.props.userComment) {
       this.setState({ userComment: this.props.userComment });
     }
   }
 
-  // Handle comment text change
-  handleCommentChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
+  handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     this.setState({ userComment: e.target.value });
-  }
+  };
 
-  // Handle adding a comment
-  handleAddComment(): void {
+  handleAddComment = (): void => {
     const { postId, onAddComment } = this.props;
     const { userComment } = this.state;
     if (userComment.trim()) {
       onAddComment(postId, userComment);
-      this.setState({ userComment: "" }); // Clear comment after adding
+      this.setState({ userComment: "" });
     }
-  }
+  };
 
-  // Handle next image
-  handleNextImage(): void {
+  handleNextImage = (): void => {
     const { currentImageIndex } = this.state;
     const { images } = this.props;
     this.setState({
       currentImageIndex: (currentImageIndex + 1) % images.length,
     });
-  }
+  };
 
-  // Handle previous image
-  handlePrevImage(): void {
+  handlePrevImage = (): void => {
     const { currentImageIndex } = this.state;
     const { images } = this.props;
     this.setState({
       currentImageIndex:
         (currentImageIndex - 1 + images.length) % images.length,
     });
+  };
+
+  renderComments(): React.ReactElement | null {
+    const { comments } = this.props;
+
+    if (comments.length === 0) {
+      return <p className="text-sm text-gray-500">No comments yet.</p>;
+    }
+
+    return (
+      <>
+        {comments.map((comment, idx) => (
+          <div key={idx} className="mb-2">
+            <p className="text-sm text-gray-700">
+              <strong>@{comment.CommentAuthor.Title}</strong>: &quot;
+              {comment.Title}&quot;
+            </p>
+          </div>
+        ))}
+      </>
+    );
   }
 
-  render(): React.ReactElement<ImageSliderModalProps> | undefined {
-    const { images, caption, comments, user, isOpen, onClose } = this.props;
+  render(): React.ReactElement<ImageSliderModalProps> | null {
+    const { images, caption, user, isOpen, onClose } = this.props;
     const { userComment, currentImageIndex } = this.state;
 
-    if (!isOpen) return undefined;
+    if (!isOpen) return null;
 
     return (
       <div
@@ -159,18 +171,7 @@ class ImageSliderModal extends React.Component<
                 <h5 className="text-md font-semibold text-gray-600">
                   Comments
                 </h5>
-                {comments.length > 0 ? (
-                  comments.map((comment, idx) => (
-                    <div key={idx} className="mb-2">
-                      <p className="text-sm text-gray-700">
-                        <strong>@{comment.CommentAuthor.Title}</strong>: &quot;
-                        {comment.Title}&quot;
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No comments yet.</p>
-                )}
+                {this.renderComments()}
               </div>
             </div>
 

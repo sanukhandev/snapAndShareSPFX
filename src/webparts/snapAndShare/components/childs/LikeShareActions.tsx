@@ -9,30 +9,38 @@ interface LikeShareActionsProps {
   onShare: () => void;
 }
 
-const LikeShareActions: React.FC<LikeShareActionsProps> = ({
-  isLiked,
-  likeCount,
-  onLike,
-  onShare,
-}) => {
-  return (
-    <div className="flex space-x-4">
-      <button
-        className={`flex items-center ${
-          isLiked ? "text-red-500" : "text-blue-500"
-        }`}
-        onClick={onLike}
-      >
-        <FontAwesomeIcon icon={faHeart} className="m-2" />
-        {isLiked ? "Unlike" : "Like"} ({likeCount})
-      </button>
+interface LikeShareActionsState {}
 
-      <button className="text-blue-500 flex items-center" onClick={onShare}>
-        <FontAwesomeIcon icon={faShare} className="m-2" />
-        Share
-      </button>
-    </div>
-  );
-};
+class LikeShareActions extends React.Component<
+  LikeShareActionsProps,
+  LikeShareActionsState
+> {
+  constructor(props: LikeShareActionsProps) {
+    super(props);
+  }
+
+  render(): React.ReactElement {
+    const { isLiked, likeCount, onLike, onShare } = this.props;
+
+    return (
+      <div className="flex space-x-4">
+        <button
+          className={`flex items-center ${
+            isLiked ? "text-red-500" : "text-blue-500"
+          }`}
+          onClick={onLike}
+        >
+          <FontAwesomeIcon icon={faHeart} className="m-2" />
+          {isLiked ? "Unlike" : "Like"} ({likeCount})
+        </button>
+
+        <button className="text-blue-500 flex items-center" onClick={onShare}>
+          <FontAwesomeIcon icon={faShare} className="m-2" />
+          Share
+        </button>
+      </div>
+    );
+  }
+}
 
 export default LikeShareActions;
