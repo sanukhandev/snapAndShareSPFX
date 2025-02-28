@@ -4,30 +4,24 @@ import { faComment } from "@fortawesome/free-solid-svg-icons";
 import ImageSliderModal from "./ImageSliderModal";
 import LikeShareActions from "./LikeShareActions";
 
-interface CommentAuthor {
-  Title: string;
-}
-
 interface Comment {
-  CommentAuthor: CommentAuthor;
+  id: number;
+  comment: string;
+  CommentAuthor: { Title: string };
   Title: string;
-}
-
-interface PostWithComments {
-  ID: number;
-  Title: string;
-  Createed: string;
-  avatarUrl: string;
-  imageUrl: string;
-  user: string;
-  comments: Comment[];
-  isLiked: boolean;
-  likeCount: number;
-  images: { FileRef: string }[];
 }
 
 interface PostProps {
-  post: PostWithComments;
+  post: {
+    id: number;
+    title: string;
+    postedBy: string;
+    postedByEmail: string;
+    postedByRole: string;
+    likes: number;
+    images: string[];
+    comments: Comment[];
+  };
   onAddComment: (postId: number, comment: string) => void;
   onLike: (postId: number) => void;
   onShare: (postId: number) => void;
@@ -45,88 +39,63 @@ class Post extends React.Component<PostProps, PostState> {
       userComment: "",
       isModalOpen: false,
     };
-
-    this.openModal = this.openModal.bind(this);
-    this.closeModal = this.closeModal.bind(this);
-    this.handleAddComment = this.handleAddComment.bind(this);
-    this.handleCommentChange = this.handleCommentChange.bind(this);
   }
 
-  // Open modal to display the image slider
-  openModal(): void {
+  openModal = (): void => {
     this.setState({ isModalOpen: true });
-  }
+  };
 
-  // Close the modal
-  closeModal(): void {
+  closeModal = (): void => {
     this.setState({ isModalOpen: false });
-  }
+  };
 
-  // Handle comment text change
-  handleCommentChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
+  handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     this.setState({ userComment: e.target.value });
-  }
+  };
 
-  // Add a comment
-  handleAddComment(): void {
+  handleAddComment = (): void => {
     const { userComment } = this.state;
     if (userComment.trim()) {
-      this.props.onAddComment(this.props.post.ID, userComment);
+      this.props.onAddComment(this.props.post.id, userComment);
       this.setState({ userComment: "" });
     }
-  }
+  };
 
   render(): JSX.Element {
     const { post, onLike, onShare } = this.props;
     const { isModalOpen, userComment } = this.state;
 
-    // Format the date
-    const postDate = new Date(post.Createed).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-
-    // Determine the latest comment or default comment
     const latestComment = post.comments.length
       ? post.comments[0]
-      : { CommentAuthor: { Title: "Anonymous" }, Title: "No comments yet." };
+      : { id: 0, comment: "No comments yet." };
 
     return (
       <div className="bg-white shadow-md rounded-lg mb-6">
-        {/* Post Header */}
         <div className="p-4 border-b flex items-center">
-          <img
-            src={post.avatarUrl}
-            alt="User Avatar"
-            className="rounded-full w-12 h-12 mr-4"
-          />
           <div className="flex flex-col">
-            <h4 className="text-lg font-bold">{post.user}</h4>
-            <p className="text-gray-500">{postDate}</p>
+            <h4 className="text-lg font-bold">{post.postedBy}</h4>
+            <p className="text-gray-500">{post.postedByRole}</p>
           </div>
         </div>
 
-        {/* Post Image */}
         <div
           className="w-full h-64 overflow-hidden flex justify-center items-center cursor-pointer"
           onClick={this.openModal}
         >
           <img
-            src={post.imageUrl}
-            alt={post.Title}
+            src={post.images[0]}
+            alt={post.title}
             className="object-cover w-full h-full"
           />
         </div>
 
-        {/* Image Slider Modal */}
         {isModalOpen && (
           <ImageSliderModal
-            images={post.images}
-            caption={post.Title}
+            images={post.images.map((image) => ({ FileRef: image }))}
+            caption={post.title}
             comments={post.comments}
-            postId={post.ID}
-            user={post.user}
+            postId={post.id}
+            user={post.postedBy}
             userComment={userComment}
             isOpen={isModalOpen}
             onClose={this.closeModal}
@@ -134,38 +103,30 @@ class Post extends React.Component<PostProps, PostState> {
           />
         )}
 
-        {/* Post Content */}
         <div className="p-4">
           <p className="italic text-gray-600 text-small ml-2">
-            &quot;{post.Title}&quot;
+            &quot;{post.title}&quot;
           </p>
-
-          {/* Like, Share, and Comment Actions */}
           <div className="mt-4 flex justify-between">
             <LikeShareActions
-              isLiked={post.isLiked}
-              likeCount={post.likeCount}
-              onLike={() => onLike(post.ID)}
-              onShare={() => onShare(post.ID)}
+              isLiked={post.likes > 0}
+              likeCount={post.likes}
+              onLike={() => onLike(post.id)}
+              onShare={() => onShare(post.id)}
             />
             <button className="text-blue-500 flex items-center">
-              <FontAwesomeIcon icon={faComment} className="m-2" />
-              Comment
+              <FontAwesomeIcon icon={faComment} className="m-2" /> Comment
             </button>
           </div>
 
-          {/* Display Latest Comment */}
           <div className="mt-2">
             <div className="flex items-start space-x-4 mt-2">
               <div className="bg-gray-100 rounded-lg p-2 shadow-md w-full">
-                <p className="text-gray-700 font-semibold">
-                  @{latestComment.CommentAuthor.Title}
-                </p>
-                <p className="text-gray-600">{latestComment.Title}</p>
+                <p className="text-gray-700 font-semibold">@{post.postedBy}</p>
+                <p className="text-gray-600">{latestComment.comment}</p>
               </div>
             </div>
 
-            {/* Comment Input Field */}
             <textarea
               value={userComment}
               onChange={this.handleCommentChange}
