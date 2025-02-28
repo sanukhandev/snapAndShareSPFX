@@ -139,10 +139,11 @@ class SpService {
     comment: string,
     authorId: number
   ): Promise<void> {
-    await sp.web.lists.getByTitle("SnapAndShareComments").items.add({
-      Title: comment,
-      PostID: postId,
-      CommentAuthorId: authorId,
+    await sp.web.lists.getByTitle("BirthdayComments").items.add({
+      Comment: comment,
+      PostId: postId,
+      PostedById: authorId,
+      CommentType: "SNP",
     });
   }
 

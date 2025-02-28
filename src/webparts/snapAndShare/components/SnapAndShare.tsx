@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from "react";
 import CreatePost from "./childs/CreatePost";
-// import Post from "./childs/Post"; // Correct the import path for the Post component
+import Post from "./childs/Post"; // Correct the import path for the Post component
 import Toast from "./childs/Toast";
 import { spService } from "../../../spService";
 import { ISnapAndShareProps } from "./ISnapAndShareProps";
@@ -142,14 +142,13 @@ export default class SnapAndShare extends React.Component<
         {showToast && <Toast message={toastMessage} />}
         <div className="h-2" />
         {posts.map((post: any) => (
-          <p>{JSON.stringify(post)}</p>
-          // <Post
-          //   key={post.ID}
-          //   post={post}
-          //   onAddComment={this.handleAddComment}
-          //   onLike={this.handleLike}
-          //   onShare={this.handleShare}
-          // />
+          <Post
+            key={post.ID}
+            post={post}
+            onAddComment={this.handleAddComment}
+            onLike={this.handleLike}
+            onShare={this.handleShare}
+          />
         ))}
       </div>
     );
