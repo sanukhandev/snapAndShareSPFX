@@ -19,6 +19,8 @@ export interface IImage {
 }
 
 export interface IComment {
+  PostedBy: any;
+  Comment: string;
   ID: number;
   Title: string;
   CommentAuthor: {
@@ -40,11 +42,15 @@ class SpService {
 
   private async getItems(
     listName: string,
-    filters: string[] = []
+    filters: string[] = [],
+    expand: string[] = []
   ): Promise<any[]> {
     let query = sp!.web.lists.getByTitle(listName).items;
     if (filters.length > 0) {
       query = query.filter(filters.join(" and "));
+    }
+    if (expand.length > 0) {
+      query = query.expand(...expand);
     }
 
     return await query();
@@ -54,14 +60,21 @@ class SpService {
   private async fetchListItems<T>(
     listTitle: string,
     selectFields: string[],
-    expandFields: string[] = []
+    expandFields: string[] = [],
+    filters: string[] = []
   ): Promise<T[]> {
-    return sp.web.lists
-      .getByTitle(listTitle)
-      .items.select(...selectFields)
-      .expand(...expandFields)
-      .orderBy("ID", false)
-      .get();
+    let query = sp!.web.lists.getByTitle(listTitle).items;
+    if (selectFields.length > 0) {
+      query = query.select(selectFields.join(" and "));
+    }
+    if (filters.length > 0) {
+      query = query.filter(filters.join(" and "));
+    }
+    if (expandFields.length > 0) {
+      query = query.expand(...expandFields);
+    }
+
+    return await query();
   }
 
   // Get all posts
@@ -258,14 +271,18 @@ class SpService {
     const snapShareWithComments = await Promise.all(
       snapShareItems.map(async (item: any) => {
         try {
-          const comments = await this.getItems("BirthdayComments", [
-            `CommentType eq 'SNP'`,
-            `PostId eq ${item.id}`,
-          ]);
+          const comments = await this.fetchListItems<IComment>(
+            "BirthdayComments",
+            ["ID","Comment", "PostedBy/EMail", "Posted/Title"],
+            [`CommentType eq 'SNP'`, `PostId eq ${item.id}`],
+            ["PostedBy"]
+          );
 
           const formattedComments = comments.map((comment) => ({
             id: comment.ID,
             comment: comment.Comment || "",
+            postedBy: comment.PostedBy.Title,
+            postedByEmail: comment.PostedBy.EMail
           }));
 
           return { ...item, comments: formattedComments };

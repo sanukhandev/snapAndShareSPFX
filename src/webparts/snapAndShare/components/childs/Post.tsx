@@ -7,7 +7,8 @@ import LikeShareActions from "./LikeShareActions";
 interface Comment {
   id: number;
   comment: string;
-  CommentAuthor: { Title: string };
+  postedBy: string;
+  postedByEmail: string;
   Title: string;
 }
 
@@ -93,7 +94,10 @@ class Post extends React.Component<PostProps, PostState> {
           <ImageSliderModal
             images={post.images.map((image) => ({ FileRef: image }))}
             caption={post.title}
-            comments={post.comments}
+            comments={post.comments.map(comment => ({
+              CommentAuthor: { Title: comment.postedBy },
+              Title: comment.comment
+            }))}
             postId={post.id}
             user={post.postedBy}
             userComment={userComment}
