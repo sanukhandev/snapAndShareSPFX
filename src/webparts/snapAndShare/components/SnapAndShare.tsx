@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from "react";
 import CreatePost from "./childs/CreatePost";
-import Post from "./childs/Post"; // Correct the import path for the Post component
+// import Post from "./childs/Post"; // Correct the import path for the Post component
 import Toast from "./childs/Toast";
-import { spService, IPost } from "../../../spService";
+import { spService } from "../../../spService";
 import { ISnapAndShareProps } from "./ISnapAndShareProps";
 import "../../../styles/dist/tailwind.css";
 
