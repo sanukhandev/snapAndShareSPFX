@@ -8,6 +8,7 @@ import {
 import { BaseClientSideWebPart } from "@microsoft/sp-webpart-base";
 import { IReadonlyTheme } from "@microsoft/sp-component-base";
 import * as strings from "SnapAndShareWebPartStrings";
+import { SPComponentLoader } from "@microsoft/sp-loader";
 import SnapAndShare from "./components/SnapAndShare";
 import { ISnapAndShareProps } from "./components/ISnapAndShareProps";
 
@@ -35,7 +36,13 @@ export default class SnapAndShareWebPart extends BaseClientSideWebPart<ISnapAndS
     ReactDom.render(element, this.domElement);
   }
 
-  protected onInit(): Promise<void> {
+  protected async onInit(): Promise<void> {
+    SPComponentLoader.loadCss(
+      `https://techcarrotae.sharepoint.com/sites/TIPDev1/Assets/css/main.min.css`
+    );
+    await SPComponentLoader.loadScript(
+      `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js`
+    );
     return this._getEnvironmentMessage().then((message) => {
       this._environmentMessage = message;
     });

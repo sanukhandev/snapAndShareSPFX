@@ -3,25 +3,12 @@ import * as React from "react";
 import CreatePost from "./childs/CreatePost";
 import Post from "./childs/Post"; // Correct the import path for the Post component
 import Toast from "./childs/Toast";
-import { spService, IPost, IComment } from "../../../spService";
+import { spService, IPost } from "../../../spService";
 import { ISnapAndShareProps } from "./ISnapAndShareProps";
 import "../../../styles/dist/tailwind.css";
 
-export interface IPostWithComments extends IPost {
-  ID: number;
-  Title: string;
-  user: string;
-  avatarUrl: string;
-  images: { FileRef: string }[];
-  comments: IComment[];
-  userComment: string;
-  imageUrl: string;
-  isLiked: boolean;
-  likeCount: number;
-}
-
 interface ISnapAndShareState {
-  posts: IPostWithComments[];
+  posts: any;
   showToast: boolean;
   toastMessage: string;
 }
@@ -67,60 +54,11 @@ export default class SnapAndShare extends React.Component<
 
   private async loadPostsAndImages(): Promise<void> {
     try {
-      const [posts, images, comments] = await Promise.all([
-        spService.getPosts(),
-        spService.getImages(),
-        spService.getComments(),
-      ]);
-
-      const imagesByPostId = this.groupBy(images, "PostID");
-      const commentsByPostId = this.groupBy(comments, "PostID");
-
-      const postsWithDetails = posts.map((post) => {
-        const postImages = imagesByPostId[post.ID] || [];
-        const postComments = commentsByPostId[post.ID] || [];
-
-        return {
-          ID: post.ID,
-          Title: post.Title,
-          PostedBy: post.PostedBy,
-          Createed: post.Createed,
-          user: post.PostedBy?.Title || "Unknown User",
-          avatarUrl: post.PostedBy?.EMail
-            ? `${this.props.context.pageContext.web.absoluteUrl}/_layouts/15/userphoto.aspx?size=S&email=${post.PostedBy.EMail}`
-            : "/_layouts/15/images/person.png",
-          images: postImages, // Store all images for the post
-          comments: postComments,
-          userComment: "",
-          isLiked:
-            post.PostLikedBy?.split(";").some(
-              (x) =>
-                x ===
-                this.props.context.pageContext.legacyPageContext.userId.toString()
-            ) || false,
-          likeCount: post.PostLikedBy ? post.PostLikedBy.split(";").length : 0,
-          imageUrl: postImages.length > 0 ? postImages[0].FileRef : "", // Add the imageUrl property
-        };
-      });
-
-      this.setState({ posts: postsWithDetails });
+      const posts = await spService.getSnapPosts();
+      this.setState({ posts });
     } catch (error) {
       console.error("Error loading posts and images:", error);
     }
-  }
-
-  private groupBy<T extends { [key: string]: any }>(
-    array: T[],
-    key: string
-  ): { [key: string]: T[] } {
-    return array.reduce((result: { [key: string]: T[] }, item: T) => {
-      const group = item[key];
-      if (!result[group]) {
-        result[group] = [];
-      }
-      result[group].push(item);
-      return result;
-    }, {});
   }
 
   private async handlePostCreate(
@@ -203,14 +141,15 @@ export default class SnapAndShare extends React.Component<
         <CreatePost onPostCreate={this.handlePostCreate} />
         {showToast && <Toast message={toastMessage} />}
         <div className="h-2" />
-        {posts.map((post) => (
-          <Post
-            key={post.ID}
-            post={post}
-            onAddComment={this.handleAddComment}
-            onLike={this.handleLike}
-            onShare={this.handleShare}
-          />
+        {posts.map((post: any) => (
+          <p>{JSON.stringify(post)}</p>
+          // <Post
+          //   key={post.ID}
+          //   post={post}
+          //   onAddComment={this.handleAddComment}
+          //   onLike={this.handleLike}
+          //   onShare={this.handleShare}
+          // />
         ))}
       </div>
     );

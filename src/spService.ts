@@ -38,6 +38,18 @@ class SpService {
     });
   }
 
+  private async getItems(
+    listName: string,
+    filters: string[] = []
+  ): Promise<any[]> {
+    let query = sp!.web.lists.getByTitle(listName).items;
+    if (filters.length > 0) {
+      query = query.filter(filters.join(" and "));
+    }
+
+    return await query();
+  }
+
   // Helper method for fetching list items
   private async fetchListItems<T>(
     listTitle: string,
@@ -177,6 +189,96 @@ class SpService {
       console.error(`Error sharing post ${postId}:`, error);
       throw new Error("Unable to share post.");
     }
+  }
+
+  public async getSnapPosts(): Promise<
+    {
+      id: number;
+      title: string;
+      postedBy: string;
+      postedByEmail: string;
+      postedByRole: string;
+      likes?: number;
+      images: string[];
+      comments: {
+        id: number;
+        comment: string;
+      }[];
+    }[]
+  > {
+    const web = sp.web;
+    const siteUrl = await web.select("ServerRelativeUrl")();
+    const listItems = await web.lists
+      .getByTitle("SnapAndShareList")
+      .items.select(
+        "ID",
+        "Title",
+        "PostedBy/Id",
+        "PostedBy/Title",
+        "PostedBy/Name",
+        "PostedBy/EMail",
+        "PostedBy/Department",
+        "PostedBy/JobTitle",
+        "Likes"
+      )
+      .expand("PostedBy")()
+      .then((items: any[]) =>
+        items.map((item) => ({
+          id: item.ID,
+          title: item.Title,
+          postedBy: item.PostedBy?.Title || "Unknown",
+          postedByEmail: item.PostedBy?.EMail || "N/A",
+          postedByRole: item.PostedBy?.JobTitle || "N/A",
+          likes: item.Likes || 0,
+          images: [] as string[],
+          comments: [] as { id: number; comment: string }[], // Placeholder for comments, fetched later
+        }))
+      );
+    const snapShareItems = await Promise.all(
+      listItems.map(async (item: any) => {
+        const folderPath = `${siteUrl.ServerRelativeUrl}/SnapAndShare/${item.id}`;
+        try {
+          const files = await web
+            .getFolderByServerRelativePath(folderPath)
+            .files.select("ServerRelativeUrl")();
+          return {
+            ...item,
+            images: files.map(
+              (file: { ServerRelativeUrl: string }) => file.ServerRelativeUrl
+            ),
+          };
+        } catch (error) {
+          console.warn(`No images found for item ID: ${item.id}`, error);
+          return { ...item, images: [] };
+        }
+      })
+    );
+
+    const snapShareWithComments = await Promise.all(
+      snapShareItems.map(async (item: any) => {
+        try {
+          const comments = await this.getItems("BirthdayComments", [
+            `CommentType eq 'SNP'`,
+            `PostId eq ${item.id}`,
+          ]);
+
+          const formattedComments = comments.map((comment) => ({
+            id: comment.ID,
+            comment: comment.Comment || "",
+          }));
+
+          return { ...item, comments: formattedComments };
+        } catch (error) {
+          console.warn(
+            `Error fetching comments for item ID: ${item.id}`,
+            error
+          );
+          return { ...item, comments: [] }; // Return empty comments if none found
+        }
+      })
+    );
+
+    return snapShareWithComments;
   }
 }
 
