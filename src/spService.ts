@@ -82,11 +82,13 @@ class SpService {
   }
 
   public async addComment(postId: number, comment: string): Promise<any> {
+    const currentUser = await sp.web.currentUser.get(); // Get current user
     return sp.web.lists.getByTitle("BirthdayComments").items.add({
       Title: "Comment",
       Comment: comment,
       PostId: postId,
       CommentType: "SNP",
+      PostedById: currentUser.Id, // Assign current user ID
     });
   }
 
