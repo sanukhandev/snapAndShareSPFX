@@ -59,7 +59,74 @@ class SpService {
       query = query.filter(filters.join(" and "));
     }
 
-    return query.get(); // Ensuring proper execution
+    return query.get();
+  }
+
+  public async addPost(title: string, images: File[]): Promise<any> {
+    const newItem = await sp.web.lists
+      .getByTitle("SnapAndShareList")
+      .items.add({
+        Title: title,
+      });
+
+    const folderPath = `SnapAndShare/${newItem.data.ID}`;
+    await sp.web.folders.add(folderPath);
+
+    for (const image of images) {
+      await sp.web
+        .getFolderByServerRelativePath(folderPath)
+        .files.add(image.name, image, true);
+    }
+
+    return newItem.data;
+  }
+
+  public async addComment(postId: number, comment: string): Promise<any> {
+    return sp.web.lists.getByTitle("BirthdayComments").items.add({
+      Title: "Comment",
+      Comment: comment,
+      PostId: postId,
+      CommentType: "SNP",
+    });
+  }
+
+  public async likePost(postId: number, userEmail: string): Promise<void> {
+    const post = await sp.web.lists
+      .getByTitle("SnapAndShareList")
+      .items.getById(postId)
+      .get();
+    const likedBy = post.PostLikedBy ? post.PostLikedBy.split(";") : [];
+
+    if (!likedBy.includes(userEmail)) {
+      likedBy.push(userEmail);
+      await sp.web.lists
+        .getByTitle("SnapAndShareList")
+        .items.getById(postId)
+        .update({
+          PostLikedBy: likedBy.join(";"),
+        });
+    }
+  }
+
+  public async likeComment(
+    commentId: number,
+    userEmail: string
+  ): Promise<void> {
+    const comment = await sp.web.lists
+      .getByTitle("BirthdayComments")
+      .items.getById(commentId)
+      .get();
+    const likedBy = comment.Likes ? comment.Likes.split(";") : [];
+
+    if (!likedBy.includes(userEmail)) {
+      likedBy.push(userEmail);
+      await sp.web.lists
+        .getByTitle("BirthdayComments")
+        .items.getById(commentId)
+        .update({
+          Likes: likedBy.join(";"),
+        });
+    }
   }
 
   public async getSnapPosts(): Promise<
@@ -72,6 +139,8 @@ class SpService {
       likes?: number;
       images: string[];
       comments: {
+        postedByEmail: string;
+        postedBy: string;
         id: number;
         comment: string;
       }[];

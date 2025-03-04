@@ -1,42 +1,31 @@
 import * as React from "react";
 
 interface CreatePostProps {
-  onAddPost: (newPost: {
-    id: number;
-    title: string;
-    postedBy: string;
-    images: string[];
-    likes: number;
-    comments: any[];
-  }) => void;
+  onAddPost: (title: string, images: File[]) => Promise<void>;
 }
 
 const CreatePost: React.FC<CreatePostProps> = ({ onAddPost }) => {
   const [title, setTitle] = React.useState("");
-  const [images, setImages] = React.useState<string[]>([]);
+  const [images, setImages] = React.useState<File[]>([]);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleImageUpload = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
     if (event.target.files) {
-      const filesArray = Array.from(event.target.files).map((file) =>
-        URL.createObjectURL(file)
-      );
+      const filesArray = Array.from(event.target.files);
       setImages((prevImages) => [...prevImages, ...filesArray]);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim()) return;
-    const newPost = {
-      id: Date.now(),
-      title,
-      postedBy: "Current User",
-      images,
-      likes: 0,
-      comments: [],
-    };
-    onAddPost(newPost);
-    setTitle("");
-    setImages([]);
+    try {
+      await onAddPost(title, images);
+      setTitle("");
+      setImages([]);
+    } catch (error) {
+      console.error("Failed to add post:", error);
+    }
   };
 
   return (
@@ -60,7 +49,7 @@ const CreatePost: React.FC<CreatePostProps> = ({ onAddPost }) => {
         {images.map((img, index) => (
           <img
             key={index}
-            src={img}
+            src={URL.createObjectURL(img)}
             alt="Uploaded"
             className="w-16 h-16 object-cover rounded-md"
           />

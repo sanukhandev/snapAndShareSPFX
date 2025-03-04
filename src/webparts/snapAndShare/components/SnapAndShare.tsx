@@ -12,7 +12,7 @@ interface IPost {
   postedBy: string;
   postedByEmail: string;
   postedByRole: string;
-  likes: number;
+  likes: number; // Remove `?` to ensure it always has a value
   images: string[];
   comments: IComment[];
 }
@@ -60,48 +60,67 @@ export default class SnapAndShare extends React.Component<
   private async loadPostsAndImages(): Promise<void> {
     try {
       const posts = await spService.getSnapPosts();
-      const postsWithDefaultLikes = posts.map((post) => ({
+      const postsWithDefaults = posts.map((post) => ({
         ...post,
-        likes: post.likes ?? 0,
-        comments: post.comments.map((comment: IComment) => ({
+        likes: post.likes ?? 0, // Ensure likes always has a default value
+        comments: post.comments.map((comment) => ({
           ...comment,
-          likes: comment.likes ?? 0,
-          postedBy: comment.postedBy || "Unknown",
-          postedByEmail: comment.postedByEmail || "unknown@example.com",
+          postedBy: comment.postedBy || "Unknown", // Ensure postedBy is set
+          postedByEmail: comment.postedByEmail || "unknown@example.com", // Ensure postedByEmail is set
         })),
       }));
-      this.setState({ posts: postsWithDefaultLikes });
+      this.setState({ posts: postsWithDefaults });
     } catch (error) {
       console.error("Error loading posts and images:", error);
     }
   }
 
-  private handleAddPost = (newPost: IPost): void => {
-    this.setState((prevState) => ({ posts: [newPost, ...prevState.posts] }));
+  private handleAddPost = async (
+    title: string,
+    images: File[]
+  ): Promise<void> => {
+    try {
+      const newPost = await spService.addPost(title, images);
+      this.setState((prevState) => ({ posts: [newPost, ...prevState.posts] }));
+    } catch (error) {
+      console.error("Error adding post:", error);
+    }
   };
 
-  private handleLikePost = (postId: number): void => {
-    this.setState((prevState) => {
-      const likedPosts = new Set(prevState.likedPosts);
-      if (likedPosts.has(postId)) {
-        likedPosts.delete(postId);
-      } else {
-        likedPosts.add(postId);
-      }
-      return { likedPosts };
-    });
+  private handleAddComment = async (
+    postId: number,
+    comment: string
+  ): Promise<void> => {
+    try {
+      await spService.addComment(postId, comment);
+      await this.loadPostsAndImages();
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
   };
 
-  private handleLikeComment = (commentId: number): void => {
-    this.setState((prevState) => {
-      const likedComments = new Set(prevState.likedComments);
-      if (likedComments.has(commentId)) {
-        likedComments.delete(commentId);
-      } else {
-        likedComments.add(commentId);
-      }
-      return { likedComments };
-    });
+  private handleLikePost = async (
+    postId: number,
+    userEmail: string
+  ): Promise<void> => {
+    try {
+      await spService.likePost(postId, userEmail);
+      await this.loadPostsAndImages();
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
+
+  private handleLikeComment = async (
+    commentId: number,
+    userEmail: string
+  ): Promise<void> => {
+    try {
+      await spService.likeComment(commentId, userEmail);
+      await this.loadPostsAndImages();
+    } catch (error) {
+      console.error("Error liking comment:", error);
+    }
   };
 
   public render(): React.ReactElement<ISnapAndShareProps> {
@@ -115,8 +134,13 @@ export default class SnapAndShare extends React.Component<
             post={post}
             likedPosts={this.state.likedPosts}
             likedComments={this.state.likedComments}
-            onLikePost={this.handleLikePost}
-            onLikeComment={this.handleLikeComment}
+            onLikePost={(postId) =>
+              this.handleLikePost(postId, post.postedByEmail)
+            }
+            onLikeComment={(commentId) =>
+              this.handleLikeComment(commentId, post.postedByEmail)
+            }
+            onAddComment={this.handleAddComment}
           />
         ))}
       </div>

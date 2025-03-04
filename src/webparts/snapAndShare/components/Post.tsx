@@ -7,11 +7,12 @@ interface IPost {
   id: number;
   title: string;
   postedBy: string;
+  postedByEmail: string;
+  postedByRole: string;
+  likes: number; // Remove `?` to ensure it always has a value
   images: string[];
-  likes: number;
   comments: IComment[];
 }
-
 interface IComment {
   id: number;
   comment: string;
@@ -122,6 +123,7 @@ const Post: React.FC<PostProps> = ({
             <img
               src={post.images[selectedImage]}
               alt="Selected"
+              width={200}
               className="max-w-full max-h-screen mx-auto"
             />
           </div>
