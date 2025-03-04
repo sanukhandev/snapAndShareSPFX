@@ -3,6 +3,8 @@ import * as React from "react";
 import { spService } from "../../../spService";
 import { ISnapAndShareProps } from "./ISnapAndShareProps";
 import "../../../styles/dist/tailwind.css";
+import CreatePost from "./CreatePost";
+import Post from "./Post";
 
 interface IPost {
   id: number;
@@ -25,8 +27,8 @@ interface IComment {
 
 interface ISnapAndShareState {
   posts: IPost[];
-  newPostTitle: string;
-  newComment: { [key: number]: string };
+  likedPosts: Set<number>;
+  likedComments: Set<number>;
   showToast: boolean;
   toastMessage: string;
 }
@@ -40,8 +42,8 @@ export default class SnapAndShare extends React.Component<
 
     this.state = {
       posts: [],
-      newPostTitle: "",
-      newComment: {},
+      likedPosts: new Set(),
+      likedComments: new Set(),
       showToast: false,
       toastMessage: "",
     };
@@ -63,6 +65,7 @@ export default class SnapAndShare extends React.Component<
         likes: post.likes ?? 0,
         comments: post.comments.map((comment: IComment) => ({
           ...comment,
+          likes: comment.likes ?? 0,
           postedBy: comment.postedBy || "Unknown",
           postedByEmail: comment.postedByEmail || "unknown@example.com",
         })),
@@ -73,106 +76,48 @@ export default class SnapAndShare extends React.Component<
     }
   }
 
-  private handleLikePost(postId: number): void {
-    const updatedPosts = this.state.posts.map((post) =>
-      post.id === postId ? { ...post, likes: post.likes + 1 } : post
-    );
-    this.setState({ posts: updatedPosts });
-  }
+  private handleAddPost = (newPost: IPost): void => {
+    this.setState((prevState) => ({ posts: [newPost, ...prevState.posts] }));
+  };
 
-  private handleAddComment(postId: number): void {
-    const commentText = this.state.newComment[postId];
-    if (!commentText) return;
-
-    const updatedPosts = this.state.posts.map((post) => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          comments: [
-            ...post.comments,
-            {
-              id: Date.now(),
-              comment: commentText,
-              postedBy: "Current User",
-              postedByEmail: "user@example.com",
-              likes: 0,
-            },
-          ],
-        };
+  private handleLikePost = (postId: number): void => {
+    this.setState((prevState) => {
+      const likedPosts = new Set(prevState.likedPosts);
+      if (likedPosts.has(postId)) {
+        likedPosts.delete(postId);
+      } else {
+        likedPosts.add(postId);
       }
-      return post;
+      return { likedPosts };
     });
+  };
 
-    this.setState({
-      posts: updatedPosts,
-      newComment: { ...this.state.newComment, [postId]: "" },
+  private handleLikeComment = (commentId: number): void => {
+    this.setState((prevState) => {
+      const likedComments = new Set(prevState.likedComments);
+      if (likedComments.has(commentId)) {
+        likedComments.delete(commentId);
+      } else {
+        likedComments.add(commentId);
+      }
+      return { likedComments };
     });
-  }
+  };
 
   public render(): React.ReactElement<ISnapAndShareProps> {
     return (
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 max-w-2xl">
         <h2 className="text-xl font-bold mb-4">Snap & Share</h2>
+        <CreatePost onAddPost={this.handleAddPost} />
         {this.state.posts.map((post) => (
-          <div key={post.id} className="bg-white shadow-md p-4 mb-4 rounded-lg">
-            <h3 className="font-bold text-lg">{post.title}</h3>
-            <p className="text-sm text-gray-500">By {post.postedBy}</p>
-            <div className="flex gap-2 mt-2">
-              {post.images.map((img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt="Post"
-                  className="w-20 h-20 object-cover rounded-md"
-                />
-              ))}
-            </div>
-            <div className="flex items-center mt-2">
-              <button
-                className="bg-blue-500 text-white px-3 py-1 rounded-md"
-                onClick={() => this.handleLikePost(post.id)}
-              >
-                👍 {post.likes}
-              </button>
-            </div>
-            <div className="mt-4">
-              <input
-                type="text"
-                value={this.state.newComment[post.id] || ""}
-                onChange={(e) =>
-                  this.setState({
-                    newComment: {
-                      ...this.state.newComment,
-                      [post.id]: e.target.value,
-                    },
-                  })
-                }
-                placeholder="Add a comment..."
-                className="border p-2 rounded-md w-full"
-              />
-              <button
-                className="mt-2 bg-green-500 text-white px-3 py-1 rounded-md"
-                onClick={() => this.handleAddComment(post.id)}
-              >
-                Comment
-              </button>
-            </div>
-            <div className="mt-2">
-              {post.comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className="bg-gray-100 p-2 rounded-md mt-2"
-                >
-                  <p className="text-sm font-semibold bg-blue-300">
-                    @{comment.postedBy}:{" "}
-                    <span className="text-sm font-normal bg-green-100">
-                      {comment.comment}
-                    </span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <Post
+            key={post.id}
+            post={post}
+            likedPosts={this.state.likedPosts}
+            likedComments={this.state.likedComments}
+            onLikePost={this.handleLikePost}
+            onLikeComment={this.handleLikeComment}
+          />
         ))}
       </div>
     );
