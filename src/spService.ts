@@ -63,10 +63,12 @@ class SpService {
   }
 
   public async addPost(title: string, images: File[]): Promise<any> {
+    const currentUser = await sp.web.currentUser.get(); // Get current user
     const newItem = await sp.web.lists
       .getByTitle("SnapAndShareList")
       .items.add({
         Title: title,
+        PostedById: currentUser.Id,
       });
 
     const folderPath = `SnapAndShare/${newItem.data.ID}`;
