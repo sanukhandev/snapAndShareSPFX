@@ -1,14 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from "react";
-import CreatePost from "./childs/CreatePost";
-import Post from "./childs/Post"; // Correct the import path for the Post component
-import Toast from "./childs/Toast";
 import { spService } from "../../../spService";
 import { ISnapAndShareProps } from "./ISnapAndShareProps";
 import "../../../styles/dist/tailwind.css";
 
+interface IPost {
+  id: number;
+  title: string;
+  postedBy: string;
+  postedByEmail: string;
+  postedByRole: string;
+  likes: number;
+  images: string[];
+  comments: IComment[];
+}
+
+interface IComment {
+  id: number;
+  comment: string;
+  postedBy: string;
+  postedByEmail: string;
+  likes?: number;
+}
+
 interface ISnapAndShareState {
-  posts: any;
+  posts: IPost[];
+  newPostTitle: string;
+  newComment: { [key: number]: string };
   showToast: boolean;
   toastMessage: string;
 }
@@ -22,19 +40,13 @@ export default class SnapAndShare extends React.Component<
 
     this.state = {
       posts: [],
+      newPostTitle: "",
+      newComment: {},
       showToast: false,
       toastMessage: "",
     };
 
     spService.setup(this.props.context);
-
-    // Binding methods to ensure proper context
-    this.handlePostCreate = this.handlePostCreate.bind(this);
-    this.handleAddComment = this.handleAddComment.bind(this);
-    this.handleLike = this.handleLike.bind(this);
-    this.handleShare = this.handleShare.bind(this);
-    this.showToast = this.showToast.bind(this);
-    this.closeToast = this.closeToast.bind(this);
   }
 
   componentDidMount(): void {
@@ -43,112 +55,124 @@ export default class SnapAndShare extends React.Component<
     });
   }
 
-  private showToast(message: string): void {
-    this.setState({ showToast: true, toastMessage: message });
-    setTimeout(this.closeToast, 3000);
-  }
-
-  private closeToast(): void {
-    this.setState({ showToast: false, toastMessage: "" });
-  }
-
   private async loadPostsAndImages(): Promise<void> {
     try {
       const posts = await spService.getSnapPosts();
-      this.setState({ posts });
+      const postsWithDefaultLikes = posts.map((post) => ({
+        ...post,
+        likes: post.likes ?? 0,
+        comments: post.comments.map((comment: IComment) => ({
+          ...comment,
+          postedBy: comment.postedBy || "Unknown",
+          postedByEmail: comment.postedByEmail || "unknown@example.com",
+        })),
+      }));
+      this.setState({ posts: postsWithDefaultLikes });
     } catch (error) {
       console.error("Error loading posts and images:", error);
     }
   }
 
-  private async handlePostCreate(
-    caption: string,
-    images: File[]
-  ): Promise<void> {
-    if (!caption || images.length === 0) {
-      this.showToast("Please provide a caption and at least one image.");
-      return;
-    }
-
-    try {
-      const addedPost = await spService.addPost(
-        caption,
-        this.props.context.pageContext.legacyPageContext.userId
-      );
-
-      const postId = addedPost.data.ID;
-
-      const uploadPromises = images.map(async (image) => {
-        const fileArrayBuffer = await image.arrayBuffer();
-        await spService.uploadImage(image.name, fileArrayBuffer, postId);
-      });
-
-      await Promise.all(uploadPromises);
-      this.showToast("Post created successfully!");
-      await this.loadPostsAndImages();
-    } catch (error) {
-      console.error("Error creating post:", error);
-      this.showToast("Error creating post.");
-    }
+  private handleLikePost(postId: number): void {
+    const updatedPosts = this.state.posts.map((post) =>
+      post.id === postId ? { ...post, likes: post.likes + 1 } : post
+    );
+    this.setState({ posts: updatedPosts });
   }
 
-  private async handleLike(postId: number): Promise<void> {
-    try {
-      await spService.likePost(
-        postId,
-        this.props.context.pageContext.legacyPageContext.userId
-      );
-      this.showToast("Post liked successfully!");
-      await this.loadPostsAndImages();
-    } catch (error) {
-      console.error("Error liking post:", error);
-      this.showToast("Error liking post.");
-    }
-  }
+  private handleAddComment(postId: number): void {
+    const commentText = this.state.newComment[postId];
+    if (!commentText) return;
 
-  private async handleShare(postId: number): Promise<void> {
-    try {
-      await spService.sharePost(postId);
-      this.showToast("Post shared successfully!");
-    } catch (error) {
-      console.error("Error sharing post:", error);
-      this.showToast("Error sharing post.");
-    }
-  }
+    const updatedPosts = this.state.posts.map((post) => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          comments: [
+            ...post.comments,
+            {
+              id: Date.now(),
+              comment: commentText,
+              postedBy: "Current User",
+              postedByEmail: "user@example.com",
+              likes: 0,
+            },
+          ],
+        };
+      }
+      return post;
+    });
 
-  private async handleAddComment(
-    postId: number,
-    comment: string
-  ): Promise<void> {
-    try {
-      await spService.addComment(
-        postId,
-        comment,
-        this.props.context.pageContext.legacyPageContext.userId
-      );
-      this.showToast("Comment added successfully!");
-      await this.loadPostsAndImages();
-    } catch (error) {
-      console.error("Error adding comment:", error);
-      this.showToast("Error adding comment.");
-    }
+    this.setState({
+      posts: updatedPosts,
+      newComment: { ...this.state.newComment, [postId]: "" },
+    });
   }
 
   public render(): React.ReactElement<ISnapAndShareProps> {
-    const { posts, showToast, toastMessage } = this.state;
     return (
-      <div className="container mx-auto p-2">
-        <CreatePost onPostCreate={this.handlePostCreate} />
-        {showToast && <Toast message={toastMessage} />}
-        <div className="h-2" />
-        {posts.map((post: any) => (
-          <Post
-            key={post.ID}
-            post={post}
-            onAddComment={this.handleAddComment}
-            onLike={this.handleLike}
-            onShare={this.handleShare}
-          />
+      <div className="container mx-auto p-4">
+        <h2 className="text-xl font-bold mb-4">Snap & Share</h2>
+        {this.state.posts.map((post) => (
+          <div key={post.id} className="bg-white shadow-md p-4 mb-4 rounded-lg">
+            <h3 className="font-bold text-lg">{post.title}</h3>
+            <p className="text-sm text-gray-500">By {post.postedBy}</p>
+            <div className="flex gap-2 mt-2">
+              {post.images.map((img, index) => (
+                <img
+                  key={index}
+                  src={img}
+                  alt="Post"
+                  className="w-20 h-20 object-cover rounded-md"
+                />
+              ))}
+            </div>
+            <div className="flex items-center mt-2">
+              <button
+                className="bg-blue-500 text-white px-3 py-1 rounded-md"
+                onClick={() => this.handleLikePost(post.id)}
+              >
+                👍 {post.likes}
+              </button>
+            </div>
+            <div className="mt-4">
+              <input
+                type="text"
+                value={this.state.newComment[post.id] || ""}
+                onChange={(e) =>
+                  this.setState({
+                    newComment: {
+                      ...this.state.newComment,
+                      [post.id]: e.target.value,
+                    },
+                  })
+                }
+                placeholder="Add a comment..."
+                className="border p-2 rounded-md w-full"
+              />
+              <button
+                className="mt-2 bg-green-500 text-white px-3 py-1 rounded-md"
+                onClick={() => this.handleAddComment(post.id)}
+              >
+                Comment
+              </button>
+            </div>
+            <div className="mt-2">
+              {post.comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className="bg-gray-100 p-2 rounded-md mt-2"
+                >
+                  <p className="text-sm font-semibold bg-blue-300">
+                    @{comment.postedBy}:{" "}
+                    <span className="text-sm font-normal bg-green-100">
+                      {comment.comment}
+                    </span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     );
