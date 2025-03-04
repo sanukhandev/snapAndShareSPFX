@@ -25,6 +25,7 @@ interface PostProps {
   likedComments: Set<number>;
   onLikePost: (postId: number) => void;
   onLikeComment: (commentId: number) => void;
+  onAddComment: (postId: number, comment: string) => void;
 }
 
 const Post: React.FC<PostProps> = ({
@@ -33,13 +34,22 @@ const Post: React.FC<PostProps> = ({
   likedComments,
   onLikePost,
   onLikeComment,
+  onAddComment,
 }) => {
   const [isModalOpen, setModalOpen] = React.useState(false);
   const [selectedImage, setSelectedImage] = React.useState(0);
+  const [newComment, setNewComment] = React.useState("");
 
   const openModal = (index: number): void => {
     setSelectedImage(index);
     setModalOpen(true);
+  };
+
+  const handleCommentSubmit = () => {
+    if (newComment.trim()) {
+      onAddComment(post.id, newComment);
+      setNewComment("");
+    }
   };
 
   return (
@@ -67,6 +77,21 @@ const Post: React.FC<PostProps> = ({
           onClick={() => onLikePost(post.id)}
         />
         <span>({post.likes}) Likes</span>
+      </div>
+      <div className="mt-4 flex gap-2">
+        <input
+          type="text"
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Add a comment..."
+          className="border p-2 rounded-md w-full"
+        />
+        <button
+          className="bg-green-500 text-white px-3 py-1 rounded-md"
+          onClick={handleCommentSubmit}
+        >
+          Comment
+        </button>
       </div>
       <div className="mt-2 space-y-2">
         {post.comments.map((comment) => (
