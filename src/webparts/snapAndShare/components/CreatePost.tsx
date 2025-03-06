@@ -4,65 +4,126 @@ interface CreatePostProps {
   onAddPost: (title: string, images: File[]) => Promise<void>;
 }
 
-const CreatePost: React.FC<CreatePostProps> = ({ onAddPost }) => {
-  const [title, setTitle] = React.useState("");
-  const [images, setImages] = React.useState<File[]>([]);
+interface CreatePostState {
+  title: string;
+  images: File[];
+}
 
-  const handleImageUpload = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void => {
+class CreatePost extends React.Component<CreatePostProps, CreatePostState> {
+  private fileInputRef: React.RefObject<HTMLInputElement>;
+
+  constructor(props: CreatePostProps) {
+    super(props);
+    this.state = {
+      title: "",
+      images: [],
+    };
+    this.fileInputRef = React.createRef();
+  }
+
+  handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
-      setImages((prevImages) => [...prevImages, ...filesArray]);
+      this.setState((prevState) => ({
+        images: [...prevState.images, ...filesArray],
+      }));
     }
   };
 
-  const handleSubmit = async () => {
+  handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    this.setState({ title: event.target.value });
+  };
+
+  handleSubmit = async (): Promise<void> => {
+    const { title, images } = this.state;
     if (!title.trim()) return;
     try {
-      await onAddPost(title, images);
-      setTitle("");
-      setImages([]);
+      await this.props.onAddPost(title, images);
+      this.setState({ title: "", images: [] });
+      if (this.fileInputRef.current) this.fileInputRef.current.value = "";
     } catch (error) {
       console.error("Failed to add post:", error);
     }
   };
 
-  return (
-    <div className="bg-gray-100 p-4 rounded-lg mb-4">
-      <h3 className="font-bold mb-2">Create a Post</h3>
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Post title..."
-        className="border p-2 rounded-md w-full mb-2"
-      />
-      <input
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={handleImageUpload}
-        className="mb-2"
-      />
-      <div className="flex gap-2 flex-wrap">
-        {images.map((img, index) => (
-          <img
-            key={index}
-            src={URL.createObjectURL(img)}
-            alt="Uploaded"
-            className="w-16 h-16 object-cover rounded-md"
-          />
-        ))}
+  render(): JSX.Element {
+    return (
+      <div className="post-container bg-light-gray p-4 rounded-3 mb-4">
+        <h5>Create a Post</h5>
+        <input
+          type="text"
+          className="form-control mb-2"
+          placeholder="Post Title..."
+          value={this.state.title}
+          onChange={this.handleTitleChange}
+        />
+        <div className="d-flex align-items-center">
+          <label className="btn d-flex align-items-center main-btn btn-outline-primary me-2">
+            Attach Files
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 26 26"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M17.4067 6.2371L17.4067 17.9909C17.4067 20.7674 15.1559 23.0182 12.3794 23.0182C9.60286 23.0182 7.35204 20.7674 7.35204 17.9909L7.35204 7.00512"
+                stroke="#2B2B6B"
+                strokeWidth="1.5"
+                strokeMiterlimit="10"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M10.7035 14.0806V6.237"
+                stroke="#2B2B6B"
+                strokeWidth="1.5"
+                strokeMiterlimit="10"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M14.0552 7.00496L14.0552 17.9907C14.0552 18.9162 13.3049 19.6665 12.3794 19.6665C11.4539 19.6665 10.7036 18.9162 10.7036 17.9907L10.7036 14.0805"
+                stroke="#2B2B6B"
+                strokeWidth="1.5"
+                strokeMiterlimit="10"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M10.7036 6.23704C10.7036 4.38605 12.2042 2.88548 14.0551 2.88548C15.9061 2.88548 17.4067 4.38602 17.4068 6.23704"
+                stroke="#2B2B6B"
+                strokeWidth="1.5"
+                strokeMiterlimit="10"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <input
+              type="file"
+              hidden
+              ref={this.fileInputRef}
+              multiple
+              accept="image/*"
+              onChange={this.handleImageUpload}
+            />
+          </label>
+          <span>
+            {this.state.images.length > 0
+              ? `${this.state.images.length} file(s) chosen`
+              : "No file chosen"}
+          </span>
+          <button
+            className="btn btn-primary ms-auto text-white"
+            onClick={this.handleSubmit}
+          >
+            Create Post
+          </button>
+        </div>
       </div>
-      <button
-        onClick={handleSubmit}
-        className="bg-blue-500 text-white px-4 py-2 rounded-md mt-2"
-      >
-        Post
-      </button>
-    </div>
-  );
-};
+    );
+  }
+}
 
 export default CreatePost;

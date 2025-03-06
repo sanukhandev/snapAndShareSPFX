@@ -2,23 +2,104 @@ import * as React from "react";
 
 interface ModalProps {
   onClose: () => void;
-  children: React.ReactNode;
+  images: string[];
 }
 
-const Modal: React.FC<ModalProps> = ({ onClose, children }) => {
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white p-4 rounded-lg shadow-lg max-w-3xl w-full relative">
-        <button
-          className="absolute top-2 right-2 text-gray-600"
-          onClick={onClose}
-        >
-          ✖
-        </button>
-        {children}
+interface ModalState {
+  activeIndex: number;
+}
+
+class Modal extends React.Component<ModalProps, ModalState> {
+  constructor(props: ModalProps) {
+    super(props);
+    this.state = {
+      activeIndex: 0,
+    };
+  }
+
+  handlePrev = (): void => {
+    this.setState((prevState) => ({
+      activeIndex:
+        prevState.activeIndex === 0
+          ? this.props.images.length - 1
+          : prevState.activeIndex - 1,
+    }));
+  };
+
+  handleNext = (): void => {
+    this.setState((prevState) => ({
+      activeIndex:
+        prevState.activeIndex === this.props.images.length - 1
+          ? 0
+          : prevState.activeIndex + 1,
+    }));
+  };
+
+  render(): JSX.Element {
+    const { onClose, images } = this.props;
+    const { activeIndex } = this.state;
+
+    return (
+      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h1 className="modal-title fs-5" id="staticBackdropLabel">
+              Birthday Celebration
+            </h1>
+            <button
+              type="button"
+              className="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              onClick={onClose}
+            />
+          </div>
+          <div className="modal-body">
+            <div id="carouselExample" className="carousel slide">
+              <div className="carousel-inner">
+                {images.map((img, index) => (
+                  <div
+                    key={index}
+                    className={`carousel-item ${
+                      index === activeIndex ? "active" : ""
+                    }`}
+                  >
+                    <img src={img} className="d-block w-100" alt="Slide" />
+                  </div>
+                ))}
+              </div>
+              <button
+                className="carousel-control-prev"
+                type="button"
+                data-bs-target="#carouselExample"
+                data-bs-slide="prev"
+                onClick={this.handlePrev}
+              >
+                <span
+                  className="carousel-control-prev-icon"
+                  aria-hidden="true"
+                />
+                <span className="visually-hidden">Previous</span>
+              </button>
+              <button
+                className="carousel-control-next"
+                type="button"
+                data-bs-target="#carouselExample"
+                data-bs-slide="next"
+                onClick={this.handleNext}
+              >
+                <span
+                  className="carousel-control-next-icon"
+                  aria-hidden="true"
+                />
+                <span className="visually-hidden">Next</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  }
+}
 
 export default Modal;

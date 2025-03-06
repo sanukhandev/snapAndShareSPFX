@@ -12,7 +12,7 @@ interface IPost {
   postedBy: string;
   postedByEmail: string;
   postedByRole: string;
-  likes: number; // Remove `?` to ensure it always has a value
+  likes: string; // Remove `?` to ensure it always has a value
   images: string[];
   comments: IComment[];
 }
@@ -22,7 +22,7 @@ interface IComment {
   comment: string;
   postedBy: string;
   postedByEmail: string;
-  likes?: number;
+  likes?: string;
 }
 
 interface ISnapAndShareState {
@@ -31,6 +31,7 @@ interface ISnapAndShareState {
   likedComments: Set<number>;
   showToast: boolean;
   toastMessage: string;
+  currUserId: number;
 }
 
 export default class SnapAndShare extends React.Component<
@@ -46,6 +47,7 @@ export default class SnapAndShare extends React.Component<
       likedComments: new Set(),
       showToast: false,
       toastMessage: "",
+      currUserId: 0,
     };
 
     spService.setup(this.props.context);
@@ -55,6 +57,10 @@ export default class SnapAndShare extends React.Component<
     this.loadPostsAndImages().catch((error) => {
       console.error("Error loading posts and images:", error);
     });
+
+    // get current User id
+    const userId = this.props.context.pageContext.legacyPageContext.userId;
+    this.setState({ currUserId: userId });
   }
 
   private async loadPostsAndImages(): Promise<void> {
@@ -62,7 +68,7 @@ export default class SnapAndShare extends React.Component<
       const posts = await spService.getSnapPosts();
       const postsWithDefaults = posts.map((post) => ({
         ...post,
-        likes: post.likes ?? 0, // Ensure likes always has a default value
+        likes: post.likes ?? "0", // Ensure likes always has a default value
         comments: post.comments.map((comment) => ({
           ...comment,
           postedBy: comment.postedBy || "Unknown", // Ensure postedBy is set
@@ -80,8 +86,10 @@ export default class SnapAndShare extends React.Component<
     images: File[]
   ): Promise<void> => {
     try {
-      const newPost = await spService.addPost(title, images);
-      this.setState((prevState) => ({ posts: [newPost, ...prevState.posts] }));
+      await spService.addPost(title, images);
+      this.loadPostsAndImages().catch((error) => {
+        console.error("Error loading posts and images:", error);
+      });
     } catch (error) {
       console.error("Error adding post:", error);
     }
@@ -104,7 +112,7 @@ export default class SnapAndShare extends React.Component<
     userEmail: string
   ): Promise<void> => {
     try {
-      await spService.likePost(postId, userEmail);
+      await spService.likePost(postId, this.state.currUserId + "");
       await this.loadPostsAndImages();
     } catch (error) {
       console.error("Error liking post:", error);
@@ -116,7 +124,7 @@ export default class SnapAndShare extends React.Component<
     userEmail: string
   ): Promise<void> => {
     try {
-      await spService.likeComment(commentId, userEmail);
+      await spService.likeComment(commentId, this.state.currUserId + "");
       await this.loadPostsAndImages();
     } catch (error) {
       console.error("Error liking comment:", error);
@@ -132,6 +140,7 @@ export default class SnapAndShare extends React.Component<
           <Post
             key={post.id}
             post={post}
+            userId={this.state.currUserId}
             likedPosts={this.state.likedPosts}
             likedComments={this.state.likedComments}
             onLikePost={(postId) =>

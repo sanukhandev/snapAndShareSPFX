@@ -16,7 +16,14 @@
     "noImplicitAny": true,
     "typeRoots": ["./node_modules/@types", "./node_modules/@microsoft"],
     "types": ["webpack-env"],
-    "lib": ["es5", "es6", "dom", "es2015.collection", "es2015.promise"]
+    "lib": [
+      "es5",
+      "es6",
+      "dom",
+      "es2015.collection",
+      "es2015.promise",
+      "es2016"
+    ]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

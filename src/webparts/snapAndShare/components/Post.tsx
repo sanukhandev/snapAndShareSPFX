@@ -1,6 +1,6 @@
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import Modal from "./Modal";
 
 interface IPost {
@@ -9,7 +9,7 @@ interface IPost {
   postedBy: string;
   postedByEmail: string;
   postedByRole: string;
-  likes: number; // Remove `?` to ensure it always has a value
+  likes: string;
   images: string[];
   comments: IComment[];
 }
@@ -17,11 +17,12 @@ interface IComment {
   id: number;
   comment: string;
   postedBy: string;
-  likes?: number;
+  likes?: string;
 }
 
 interface PostProps {
   post: IPost;
+  userId: number;
   likedPosts: Set<number>;
   likedComments: Set<number>;
   onLikePost: (postId: number) => void;
@@ -29,108 +30,144 @@ interface PostProps {
   onAddComment: (postId: number, comment: string) => void;
 }
 
-const Post: React.FC<PostProps> = ({
-  post,
-  likedPosts,
-  likedComments,
-  onLikePost,
-  onLikeComment,
-  onAddComment,
-}) => {
-  const [isModalOpen, setModalOpen] = React.useState(false);
-  const [selectedImage, setSelectedImage] = React.useState(0);
-  const [newComment, setNewComment] = React.useState("");
+interface PostState {
+  isModalOpen: boolean;
+  selectedImage: number;
+  newComment: string;
+}
 
-  const openModal = (index: number): void => {
-    setSelectedImage(index);
-    setModalOpen(true);
+class Post extends React.Component<PostProps, PostState> {
+  constructor(props: PostProps) {
+    super(props);
+    this.state = {
+      isModalOpen: false,
+      selectedImage: 0,
+      newComment: "",
+    };
+  }
+
+  openModal = (index: number): void => {
+    this.setState({ selectedImage: index, isModalOpen: true });
   };
 
-  const handleCommentSubmit = () => {
-    if (newComment.trim()) {
-      onAddComment(post.id, newComment);
-      setNewComment("");
+  handleCommentSubmit = (): void => {
+    if (this.state.newComment.trim()) {
+      this.props.onAddComment(this.props.post.id, this.state.newComment);
+      this.setState({ newComment: "" });
     }
   };
 
-  return (
-    <div className="bg-white shadow-md p-4 mb-4 rounded-lg">
-      <h3 className="font-bold text-lg mb-1">{post.title}</h3>
-      <p className="text-sm text-gray-500 mb-2">By {post.postedBy}</p>
-      <div className="flex gap-2 mt-2 flex-wrap">
-        {post.images.map((img, index) => (
-          <img
-            key={index}
-            src={img}
-            alt="Post"
-            width={160}
-            className="w-24 h-24 object-cover rounded-md cursor-pointer"
-            onClick={() => openModal(index)}
-          />
-        ))}
-      </div>
-      <div className="flex items-center mt-2 space-x-2">
-        <FontAwesomeIcon
-          icon={faHeart}
-          className={`cursor-pointer text-lg ${
-            likedPosts.has(post.id) ? "text-red-500" : "text-gray-500"
-          }`}
-          onClick={() => onLikePost(post.id)}
-        />
-        <span>({post.likes}) Likes</span>
-      </div>
-      <div className="mt-4 flex gap-2">
-        <input
-          type="text"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Add a comment..."
-          className="border p-2 rounded-md w-full"
-        />
-        <button
-          className="bg-green-500 text-white px-3 py-1 rounded-md"
-          onClick={handleCommentSubmit}
-        >
-          Comment
-        </button>
-      </div>
-      <div className="mt-2 space-y-2">
-        {post.comments.map((comment) => (
-          <div key={comment.id} className="flex items-center space-x-2">
-            <p className="text-sm font-semibold text-blue-500 cursor-pointer">
-              @{comment.postedBy}
-            </p>
-            <p className="text-sm italic flex-1">{comment.comment}</p>
+  render(): JSX.Element {
+    const { post, onLikePost, onLikeComment } = this.props;
+    return (
+      <div className="post-container border p-4 mb-5 rounded-3">
+        <h3>{post.title}</h3>
+        <p className="text-muted text-base small">
+          By <span className="text-black">{post.postedBy}</span>
+        </p>
+
+        <div className="row">
+          {post.images.slice(0, 2).map((img, index) => (
+            <div key={index} className="col-4">
+              <div
+                className="w-100 position-relative rounded-4"
+                onClick={() => this.openModal(index)}
+              >
+                <img
+                  className="img-thumbnail w-100 rounded-4 p-0"
+                  src={img}
+                  alt="Post"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="d-flex align-items-center my-4">
+          <button
+            className="btn btn-secondary d-inline-flex align-items-center rounded-5 text-white px-3 py-1 fw-bold"
+            onClick={() => onLikePost(post.id)}
+          >
             <FontAwesomeIcon
               icon={faHeart}
-              className={`cursor-pointer text-lg ${
-                likedComments.has(comment.id) ? "text-red-500" : "text-gray-500"
-              }`}
-              onClick={() => onLikeComment(comment.id)}
+              className={
+                post.likes.split(";").includes(this.props.userId + "")
+                  ? "text-red-500"
+                  : "text-gray-500"
+              }
             />
-          </div>
-        ))}
+            {post.likes.split(";").length}
+          </button>
+        </div>
+
+        <div className="mt-2 d-flex">
+          <input
+            type="text"
+            className="form-control comment-box"
+            placeholder="Add your comment"
+            value={this.state.newComment}
+            onChange={(e) => this.setState({ newComment: e.target.value })}
+          />
+          <button
+            className="btn btn-danger ms-2 btn btn-primary text-white ms-4"
+            onClick={this.handleCommentSubmit}
+          >
+            Comment
+          </button>
+        </div>
+
+        <div className="mt-4">
+          {post.comments.map((comment) => (
+            <div key={comment.id} className="d-flex align-items-start mb-3">
+              <div
+                className="user-avatar bg-danger d-flex align-items-center justify-content-center me-3 p-2 rounded-circle text-white"
+                style={{ width: "40px", height: "40px" }}
+              >
+                {comment.postedBy
+                  .split(" ")
+                  .map((name) => name[0])
+                  .join("")
+                  .toUpperCase()
+                  .substring(0, 2)}
+              </div>
+              <div className="flex-grow-1">
+                <h6 className="mb-0">
+                  <strong>{comment.postedBy}</strong>
+                  <span className="text-muted small"> Feb 28 2025</span>
+                </h6>
+                <p className="mb-1">{comment.comment}</p>
+              </div>
+              <div>
+                <button
+                  className="btn btn-secondary d-inline-flex align-items-center rounded-5 text-white text-12 px-3 py-1 fw-bold"
+                  onClick={() => onLikeComment(comment.id)}
+                >
+                  <FontAwesomeIcon
+                    icon={faHeart}
+                    className={
+                      (comment.likes || "")
+                        .split(";")
+                        .includes(this.props.userId + "")
+                        ? "text-red-500"
+                        : "text-gray-500"
+                    }
+                  />
+                  {post.likes.split(";").length}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {this.state.isModalOpen && (
+          <Modal
+            onClose={() => this.setState({ isModalOpen: false })}
+            images={post.images}
+          />
+        )}
       </div>
-      {isModalOpen && (
-        <Modal onClose={() => setModalOpen(false)}>
-          <div className="relative">
-            <button
-              className="absolute top-2 right-2 text-white"
-              onClick={() => setModalOpen(false)}
-            >
-              <FontAwesomeIcon icon={faTimes} />
-            </button>
-            <img
-              src={post.images[selectedImage]}
-              alt="Selected"
-              width={200}
-              className="max-w-full max-h-screen mx-auto"
-            />
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
-};
+    );
+  }
+}
 
 export default Post;

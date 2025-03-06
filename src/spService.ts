@@ -99,7 +99,7 @@ class SpService {
       .getByTitle("SnapAndShareList")
       .items.getById(postId)
       .get();
-    const likedBy = post.PostLikedBy ? post.PostLikedBy.split(";") : [];
+    const likedBy = post.Likes ? post.Likes.split(";") : [];
 
     if (!likedBy.includes(userEmail)) {
       likedBy.push(userEmail);
@@ -107,7 +107,7 @@ class SpService {
         .getByTitle("SnapAndShareList")
         .items.getById(postId)
         .update({
-          PostLikedBy: likedBy.join(";"),
+          Likes: likedBy.join(";"),
         });
     }
   }
@@ -140,7 +140,7 @@ class SpService {
       postedBy: string;
       postedByEmail: string;
       postedByRole: string;
-      likes?: number;
+      likes?: string;
       images: string[];
       comments: {
         postedByEmail: string;
@@ -173,7 +173,7 @@ class SpService {
           postedBy: item.PostedBy?.Title || "Unknown",
           postedByEmail: item.PostedBy?.EMail || "N/A",
           postedByRole: item.PostedBy?.JobTitle || "N/A",
-          likes: item.Likes || 0,
+          likes: item.Likes || "",
           images: [] as string[],
           comments: [] as { id: number; comment: string }[], // Placeholder for comments, fetched later
         }))
@@ -225,7 +225,7 @@ class SpService {
       })
     );
 
-    return snapShareWithComments;
+    return snapShareWithComments.sort((a, b) => b.id - a.id);
   }
 }
 
