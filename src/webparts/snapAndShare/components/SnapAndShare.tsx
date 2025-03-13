@@ -54,13 +54,11 @@ export default class SnapAndShare extends React.Component<
   }
 
   componentDidMount(): void {
+    const userId = this.props.context.pageContext.legacyPageContext.userId;
+    this.setState({ currUserId: userId });
     this.loadPostsAndImages().catch((error) => {
       console.error("Error loading posts and images:", error);
     });
-
-    // get current User id
-    const userId = this.props.context.pageContext.legacyPageContext.userId;
-    this.setState({ currUserId: userId });
   }
 
   private async loadPostsAndImages(): Promise<void> {

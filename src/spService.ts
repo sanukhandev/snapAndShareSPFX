@@ -69,6 +69,7 @@ class SpService {
       .items.add({
         Title: title,
         PostedById: currentUser.Id,
+        Likes: "",
       });
 
     const folderPath = `SnapAndShare/${newItem.data.ID}`;

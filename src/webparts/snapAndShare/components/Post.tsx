@@ -91,7 +91,7 @@ class Post extends React.Component<PostProps, PostState> {
             <FontAwesomeIcon
               icon={faHeart}
               className={
-                post.likes.split(";").includes(this.props.userId + "")
+                post.likes.split(";").includes(this.props.userId.toString())
                   ? "text-red-500"
                   : "text-gray-500"
               }
