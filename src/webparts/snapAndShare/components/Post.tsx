@@ -137,7 +137,7 @@ class Post extends React.Component<PostProps, PostState> {
                 </h6>
                 <p className="mb-1">{comment.comment}</p>
               </div>
-              <div>
+              {/* <div>
                 <button
                   className="btn btn-secondary d-inline-flex align-items-center rounded-5 text-white text-12 px-3 py-1 fw-bold"
                   onClick={() => onLikeComment(comment.id)}
@@ -154,7 +154,7 @@ class Post extends React.Component<PostProps, PostState> {
                   />
                   {post.likes.split(";").length}
                 </button>
-              </div>
+              </div> */}
             </div>
           ))}
         </div>
