@@ -60,6 +60,7 @@ export default class SnapAndShare extends React.Component<
 
     // get current User id
     const userId = this.props.context.pageContext.legacyPageContext.userId;
+    console.log("userId", userId);
     this.setState({ currUserId: userId });
   }
 
@@ -119,17 +120,17 @@ export default class SnapAndShare extends React.Component<
     }
   };
 
-  private handleLikeComment = async (
-    commentId: number,
-    userEmail: string
-  ): Promise<void> => {
-    try {
-      await spService.likeComment(commentId, this.state.currUserId + "");
-      await this.loadPostsAndImages();
-    } catch (error) {
-      console.error("Error liking comment:", error);
-    }
-  };
+  // private handleLikeComment = async (
+  //   commentId: number,
+  //   userEmail: string
+  // ): Promise<void> => {
+  //   try {
+  //     await spService.likeComment(commentId, this.state.currUserId + "");
+  //     await this.loadPostsAndImages();
+  //   } catch (error) {
+  //     console.error("Error liking comment:", error);
+  //   }
+  // };
 
   public render(): React.ReactElement<ISnapAndShareProps> {
     return (
@@ -146,9 +147,9 @@ export default class SnapAndShare extends React.Component<
             onLikePost={(postId) =>
               this.handleLikePost(postId, post.postedByEmail)
             }
-            onLikeComment={(commentId) =>
-              this.handleLikeComment(commentId, post.postedByEmail)
-            }
+            // onLikeComment={(commentId) =>
+            //   this.handleLikeComment(commentId, post.postedByEmail)
+            // }
             onAddComment={this.handleAddComment}
           />
         ))}
