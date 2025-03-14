@@ -161,6 +161,7 @@ class Post extends React.Component<PostProps, PostState> {
 
         {this.state.isModalOpen && (
           <Modal
+            title="Post Images"
             onClose={() => this.setState({ isModalOpen: false })}
             images={post.images}
           />
@@ -171,9 +172,6 @@ class Post extends React.Component<PostProps, PostState> {
 }
 
 export default Post;
-
-
-
 
 // import * as React from "react";
 // import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -235,15 +233,15 @@ export default Post;
 //     this.setState((prevState) => {
 //       let updatedLikes;
 //       let isLiked = !prevState.isLiked;
-      
+
 //       if (isLiked) {
 //         updatedLikes = [...prevState.likes, this.props.userId.toString()];
 //       } else {
 //         updatedLikes = prevState.likes.filter((id) => id !== this.props.userId.toString());
 //       }
-      
+
 //       this.props.onLikePost(this.props.post.id, updatedLikes.join(";"));
-      
+
 //       return {
 //         likes: updatedLikes,
 //         isLiked: isLiked,
